@@ -1,0 +1,25 @@
+name=abc
+version=1.0
+release=1
+
+build() {
+	# db-conflicting
+	install -d -m 0755 $PKG/usr/sbin
+	touch $PKG/usr/sbin/zic
+	chmod 0755 $PKG/usr/sbin/zic
+	
+	# mode-conflicting
+	install -d -m 0757 $PKG/sbin
+	install -d -m 0757 $PKG/bin
+	
+	# filesystem-conflicting
+	install -d -m 0755 $PKG/dev
+	touch $PKG/dev/tty0
+
+	# not conflicting
+	touch $PKG/bin/foo
+
+	# LINK
+	mkdir -p $PKG/usr/var/abc/
+	touch $PKG/usr/var/abc/foo
+}
