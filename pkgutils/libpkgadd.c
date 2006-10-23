@@ -35,6 +35,7 @@
 
 #include <pkgutils/pkgutils.h>
 
+static
 list_t config_rules;
 
 typedef enum {
@@ -344,48 +345,7 @@ void list_files(struct archive *ar, struct archive_entry *en, void *_files,
 	return;
 }
 
-typedef void (*do_archive_fun_t)(struct archive *ar, struct archive_entry *en,
-                                 void *arg1, void *arg2);
-
-// Calls func for the every archive entry. Handy function, and also eliminates
-// code duplication
-int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
-               void *arg2) {
-	struct archive *ar;
-	struct archive_entry *en;
-	int err = 0;
-
-	ar = archive_read_new();
-	if (!ar) malloc_failed();
-	archive_read_support_compression_all(ar);
-	archive_read_support_format_all(ar);
-	if (archive_read_open_filename(ar, pkg_path, 1024) != ARCHIVE_OK) {
-		puts(archive_error_string(ar));
-		err = -1;
-		goto failed;
-	}
-	
-	while (1) {
-		err = archive_read_next_header(ar, &en);
-		if (err == ARCHIVE_OK) {
-			func(ar, en, arg1, arg2);
-		}
-		else if (err == ARCHIVE_EOF) {
-			err = 0;
-			break;
-		}
-		else {
-			puts(archive_error_string(ar));
-			err = -1;
-			goto failed;
-		}
-	}
-
-failed:
-	archive_read_finish(ar);
-	return err;
-}
-
+static
 void cleanup_config() {
 	list_for_each(_rule, &config_rules) {
 		rule_t *rule = _rule->data;
@@ -467,6 +427,7 @@ int proceed_config_line(char *line) {
 	return 0;
 }
 
+static
 void read_config() {
 	char *config;
 	FILE *f;
@@ -535,15 +496,6 @@ void read_config() {
 	return;
 }
 
-pkg_desc_t *pkg_find_pkg(const char *name) {
-	list_for_each(_pkg, &pkg_db) {
-		pkg_desc_t *pkg = _pkg->data;
-		if (strcmp(pkg->name, name)) continue;
-		return pkg;
-	}
-	return NULL;
-}
-
 static
 void pkg_add_pkg(const pkg_desc_t *new_pkg, list_t *conflicts) {
 	char *tmp = fmalloc(MAXPATHLEN);
@@ -587,7 +539,7 @@ void pkg_add_pkg(const pkg_desc_t *new_pkg, list_t *conflicts) {
 	return;
 }
 
-// Returns found conflicts, or -1 on other errors
+// Returns found conflicts, -1 on other errors, 0 on success
 int pkg_add(const char *pkg_path, int opts) {
 	pkg_desc_t pkg;
 	pkg_desc_t *old_pkg;

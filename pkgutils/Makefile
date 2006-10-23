@@ -7,7 +7,7 @@ OBJS = list.o misc.o pkg_db.o libpkgadd.o libpkgrm.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
-all: pkgrm pkgadd
+all: pkgadd pkgrm pkginfo
 
 pkgadd: $(OBJS) pkgadd.o
 	$(CC) $(CFLAGS) $(OBJS) pkgadd.o $(LDFLAGS) -o $@
@@ -15,5 +15,8 @@ pkgadd: $(OBJS) pkgadd.o
 pkgrm: $(OBJS) pkgrm.o
 	$(CC) $(CFLAGS) $(OBJS) pkgrm.o $(LDFLAGS) -o $@
 
+pkginfo: $(OBJS) pkginfo.o
+	$(CC) $(CFLAGS) $(OBJS) pkginfo.o $(LDFLAGS) -o $@
+
 clean:
-	-rm -f *.o pkgadd pkgrm
+	-rm -f *.o pkgadd pkgrm pkginfo

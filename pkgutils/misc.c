@@ -52,6 +52,15 @@ const char *base_filename(const char *name) {
 	return name;
 }
 
+pkg_desc_t *pkg_find_pkg(const char *name) {
+	list_for_each(_pkg, &pkg_db) {
+		pkg_desc_t *pkg = _pkg->data;
+		if (strcmp(pkg->name, name)) continue;
+		return pkg;
+	}
+	return NULL;
+}
+
 // fills pkg_desk_t structure using package's file name
 // normally returns 0, and -1 if path does not point to a proper
 // package name
@@ -63,7 +72,8 @@ int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg) {
 
 	fname = base_filename(pkg_path);
 	fname_len = strlen(fname);
-
+	
+	// a#bPKG_EXT is minimal
 	if (fname_len < sizeof(PKG_EXT) - 1 + 3) return -1;
 
 	parsed = fmalloc(strlen(fname) + 1);
@@ -87,5 +97,44 @@ int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg) {
 	pkg->version = tmp;
 failed:
 	free(parsed);
-	return 0;
+	return err;
+}
+
+// Calls func for the every archive entry. Handy function, and also eliminates
+// code duplication. Returns 0 if succeeded.
+int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
+               void *arg2) {
+	struct archive *ar;
+	struct archive_entry *en;
+	int err = 0;
+
+	ar = archive_read_new();
+	if (!ar) malloc_failed();
+	archive_read_support_compression_all(ar);
+	archive_read_support_format_all(ar);
+	if (archive_read_open_filename(ar, pkg_path, 1024) != ARCHIVE_OK) {
+		puts(archive_error_string(ar));
+		err = -1;
+		goto failed;
+	}
+	
+	while (1) {
+		err = archive_read_next_header(ar, &en);
+		if (err == ARCHIVE_OK) {
+			func(ar, en, arg1, arg2);
+		}
+		else if (err == ARCHIVE_EOF) {
+			err = 0;
+			break;
+		}
+		else {
+			puts(archive_error_string(ar));
+			err = -1;
+			goto failed;
+		}
+	}
+
+failed:
+	archive_read_finish(ar);
+	return err;
 }

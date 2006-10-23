@@ -22,12 +22,20 @@
 
 #pragma once
 #include <pkgutils/types.h>
+#include <archive.h>
+#include <archive_entry.h>
+
+typedef void (*do_archive_fun_t)(struct archive *ar, struct archive_entry *en,
+                                 void *arg1, void *arg2);
 
 int die(const char *str);
 void malloc_failed();
 void *fmalloc(size_t size);
 const char *base_filename(const char *name);
+pkg_desc_t *pkg_find_pkg(const char *name);
 int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg);
+int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
+               void *arg2);
 
 #ifdef DEBUG
 #define dbg(str, ...) printf(str, __VA_ARGS__)
