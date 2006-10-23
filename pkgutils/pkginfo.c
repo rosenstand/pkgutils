@@ -88,8 +88,8 @@ void parse_opts(int argc, char *argv[]) {
 }
 
 static
-void print_footprint(struct archive *ar, struct archive_entry *en, void *unused1,
-                   void *unused2) {
+void print_footprint(struct archive *ar, struct archive_entry *en,
+                     void *unused1, void *unused2) {
 	static char mode[11];
 	struct passwd *pw;
 	struct group *gr;

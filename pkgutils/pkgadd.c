@@ -84,9 +84,9 @@ int main(int argc, char *argv[]) {
 	while (optind < argc) {
 		found_conflicts = pkg_add(argv[optind], opt_force);
 		if (found_conflicts & CONFLICT_PERM &&
-				!(opt_force & PKG_ADD_FORCE_PERM)) exit(1);
+		    !(opt_force & PKG_ADD_FORCE_PERM)) exit(1);
 		else if (found_conflicts & ~CONFLICT_PERM &&
-					!(opt_force & PKG_ADD_FORCE)) exit(1);
+		         !(opt_force & PKG_ADD_FORCE)) exit(1);
 		optind++;
 	}
 	pkg_free_db();
