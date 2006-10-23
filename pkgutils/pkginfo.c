@@ -26,12 +26,16 @@
 #include <getopt.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <pwd.h>
+#include <grp.h>
 #include <pkgutils/pkgutils.h>
+#include <pkgutils/filemode.h>
 
 static
 int opt_installed;
 static
-char *opt_list = NULL;
+char *opt_list = NULL,
+     *opt_footprint = NULL;
 
 static
 void print_usage(const char *argv0) {
@@ -51,10 +55,11 @@ void parse_opts(int argc, char *argv[]) {
 		{"root",         1, NULL, 'r'},
 		{"installed",    0, NULL, 'i'},
 		{"list"     ,    1, NULL, 'l'},
+		{"footprint",    1, NULL, 'f'},
 		{NULL,0,NULL,0}
 	};
 
-	while ((c = getopt_long(argc, argv, "r:il:", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "r:il:f:", opts, NULL)) != -1) {
 		switch (c) {
 			case 'r':
 				opt_root = optarg;
@@ -64,6 +69,9 @@ void parse_opts(int argc, char *argv[]) {
 				break;
 			case 'l':
 				opt_list = optarg;
+				break;
+			case 'f':
+				opt_footprint = optarg;
 				break;
 			case '?':
 				exit(1);
@@ -80,6 +88,34 @@ void parse_opts(int argc, char *argv[]) {
 }
 
 static
+void print_footprint(struct archive *ar, struct archive_entry *en, void *unused1,
+                   void *unused2) {
+	static char mode[11];
+	struct passwd *pw;
+	struct group *gr;
+
+	mode_string(archive_entry_mode(en), mode);
+	printf("%s\t", mode);
+	
+	pw = getpwuid(archive_entry_uid(en));
+	if (pw) printf("%s/", pw->pw_name);
+	else printf("%d/", archive_entry_uid(en));
+
+	gr = getgrgid(archive_entry_gid(en));
+	if (gr) printf("%s\t", gr->gr_name);
+	else printf("%d\t", archive_entry_gid(en));
+
+	puts(archive_entry_pathname(en));
+	return;
+}
+
+static
+int footprint() {
+	if (!strchr(opt_footprint, '#')) return 1;
+	return do_archive(opt_footprint, print_footprint, NULL, NULL);
+}
+
+static
 void list_ar_files(struct archive *ar, struct archive_entry *en, void *unused1,
                    void *unused2) {
 	puts(archive_entry_pathname(en));
@@ -89,18 +125,17 @@ void list_ar_files(struct archive *ar, struct archive_entry *en, void *unused1,
 static
 int list() {
 	int ret = 1;
-	pkg_desc_t pkg, *tmp;
-	if (pkg_make_desc(opt_list, &pkg) == 0) {
+	pkg_desc_t *pkg;
+
+	if (strchr(opt_list, '#')) {
 		ret = do_archive(opt_list, list_ar_files, NULL, NULL);
-		free(pkg.name);
-		free(pkg.version);
 		return ret;
 	}
 
 	pkg_init_db();
-	if ((tmp = pkg_find_pkg(opt_list)) != NULL) {
+	if ((pkg = pkg_find_pkg(opt_list)) != NULL) {
 		ret = 0;
-		list_for_each(_file, &tmp->files) {
+		list_for_each(_file, &pkg->files) {
 			pkg_file_t *file = _file->data;
 			printf("%s", file->path);
 			S_ISDIR(file->mode) ? puts("/") : puts("");
@@ -124,6 +159,9 @@ int main(int argc, char *argv[]) {
 	}
 	else if (opt_list) {
 		ret = list();
+	}
+	else if (opt_footprint) {
+		ret = footprint();
 	}
 	else {
 		ret = 1;

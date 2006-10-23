@@ -29,7 +29,6 @@ typedef void (*do_archive_fun_t)(struct archive *ar, struct archive_entry *en,
                                  void *arg1, void *arg2);
 
 int die(const char *str);
-void malloc_failed();
 void *fmalloc(size_t size);
 const char *base_filename(const char *name);
 pkg_desc_t *pkg_find_pkg(const char *name);

@@ -34,6 +34,7 @@ int die(const char *str) {
 	return 1;
 }
 
+static
 void malloc_failed() {
 	puts("malloc failed. out of memory");
 	abort();
