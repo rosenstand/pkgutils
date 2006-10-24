@@ -1,22 +1,57 @@
-CC=gcc -std=c99
-CFLAGS=-DDEBUG -g -Wall -O2 -I../include
-LDFLAGS=-larchive -lbz2 -lz
+include ../Makefile.h
 
-OBJS = list.o misc.o pkg_db.o libpkgadd.o libpkgrm.o filemode.o
+CC = gcc -std=c99
+CFLAGS += -Wall -I../include
+CFLAGS += $(LIBARCHIVE_CFLAGS)
+LDFLAGS += -L. -larchive
+LDFLAGS += $(LIBARCHIVE_LDFLAGS)
+
+OBJS = list.o misc.o libpkgdb.o libpkgadd.o libpkgrm.o filemode.o
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) -fPIC $(CFLAGS) -c $<
 
-all: pkgadd pkgrm pkginfo
+all: libpkgutils pkgadd pkgrm pkginfo pkgutils
 
-pkgadd: $(OBJS) pkgadd.o
-	$(CC) $(CFLAGS) $(OBJS) pkgadd.o $(LDFLAGS) -o $@
+libpkgutils.a:
+	$(AR) rc $@ $(OBJS)
+	$(RANLIB) $@
 
-pkgrm: $(OBJS) pkgrm.o
-	$(CC) $(CFLAGS) $(OBJS) pkgrm.o $(LDFLAGS) -o $@
+libpkgutils.so.$(LIBVERSION):
+	$(CC) -shared -Wl,-soname,libpkgutils.so $(LDFLAGS) \
+		-o libpkgutils.so.$(LIBVERSION) $(OBJS)
+	ln -s libpkgutils.so.$(LIBVERSION) libpkgutils.so
 
-pkginfo: $(OBJS) pkginfo.o
-	$(CC) $(CFLAGS) $(OBJS) pkginfo.o $(LDFLAGS) -o $@
+libpkgutils: $(OBJS) libpkgutils.so.$(LIBVERSION) libpkgutils.a
+
+pkgadd: pkgadd.c
+	$(CC) $(CFLAGS) $@.c $(LDFLAGS) -o $@ -lpkgutils
+
+pkgrm: pkgrm.c
+	$(CC) $(CFLAGS) $@.c $(LDFLAGS) -o $@ -lpkgutils
+
+pkginfo: pkginfo.c
+	$(CC) $(CFLAGS) $@.c $(LDFLAGS) -o $@ -lpkgutils
+
+pkgutils: pkgutils.c
+	$(CC) $(CFLAGS) -DSTATIC -static pkgadd.c pkgrm.c pkginfo.c $@.c \
+		 -o $@ libpkgutils.a $(LDFLAGS)
+
+install: all
+	install -m 0755 -D pkgadd $(BINDIR)/pkgadd
+	install -m 0755 -D pkgrm $(BINDIR)/pkgrm
+	install -m 0755 -D pkginfo $(BINDIR)/pkginfo
+	install -m 0755 -D pkgutils $(BINDIR)/pkgutils
+	install -m 0755 -D libpkgutils.so.$(LIBVERSION) \
+	         $(LIBDIR)/libpkgutils.so.$(LIBVERSION)
+	ln -s libpkgutils.so.$(LIBVERSION) $(LIBDIR)/libpkgutils.so
+	install -m 0644 -D ../include/filemode.h $(INCDIR)/pkgutils/filemode.h
+	install -m 0644 -D ../include/misc.h $(INCDIR)/pkgutils/misc.h
+	install -m 0644 -D ../include/types.h $(INCDIR)/pkgutils/types.h
+	install -m 0644 -D ../include/pkgutils.h $(INCDIR)/pkgutils/pkgutils.h
+	install -m 0644 -D ../include/list.h $(INCDIR)/pkgutils/list.h
 
 clean:
-	-rm -f *.o pkgadd pkgrm pkginfo
+	-rm -f *.o                            \
+		libpkgutils.so* libpkgutils.a \
+		pkgadd pkgrm pkginfo pkgutils 

@@ -190,10 +190,12 @@ int list() {
 
 static
 int installed() {
+	pkg_init_db();
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
 		printf("%s %s\n", pkg->name, pkg->version);
 	}
+	pkg_free_db();
 	return 0;
 }
 

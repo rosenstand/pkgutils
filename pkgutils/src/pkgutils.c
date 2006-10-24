@@ -20,17 +20,16 @@
 //  USA.
 //
 
-#pragma once
+#include <stdio.h>
+#include <string.h>
+#include <pkgutils/pkgutils.h>
+#include "entry.h"
 
-#ifdef STATIC
-	#define PKGADD_ENTRY  pkgadd_main
-	#define PKGRM_ENTRY   pkgrm_main
-	#define PKGINFO_ENTRY pkginfo_main
-	int PKGADD_ENTRY(int, char **);
-	int PKGRM_ENTRY(int, char **);
-	int PKGINFO_ENTRY(int, char **);
-#else
-	#define PKGADD_ENTRY  main
-	#define PKGRM_ENTRY   main
-	#define PKGINFO_ENTRY main
-#endif
+int main(int argc, char *argv[]) {
+	const char *name = base_filename(argv[0]);
+	if (!strcmp(name, "pkgadd")) PKGADD_ENTRY(argc,argv);
+	else if (!strcmp(name, "pkgrm")) PKGRM_ENTRY(argc,argv);
+	else if (!strcmp(name, "pkginfo")) PKGINFO_ENTRY(argc,argv);
+	else puts("You should not run pkgutils program directly.");
+	return 1;
+}
