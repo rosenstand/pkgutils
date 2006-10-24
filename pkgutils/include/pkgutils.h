@@ -30,7 +30,7 @@
 #define PKG_EXT         ".pkg.tar.gz"
 #define PKG_DB_DIR      "var/lib/pkg/"
 #define PKG_REJECT_DIR  "var/lib/pkg/rejected/"
-#define PKG_ADD_CONFIG  "usr/etc/pkgadd.conf"
+#define PKG_ADD_CONFIG  "etc/pkgadd.conf"
 
 #define PKG_ADD_FORCE      1
 #define PKG_ADD_FORCE_PERM 2

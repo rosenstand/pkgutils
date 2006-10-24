@@ -47,17 +47,19 @@ void parse_opts(int argc, char *argv[]) {
 	struct option opts[] = {
 		{"force"      , 0, NULL, 'f'},
 		{"force-perms", 0, NULL, 'p'},
+		{"upgrade"    , 1, NULL, 'u'},
 		{"root"       , 1, NULL, 'r'},
 		{"help"       , 0, NULL, 'h'},
 		{"version"    , 0, NULL, 'v'},
 		{NULL         , 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "fpr:hv", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "fpur:hv", opts, NULL)) != -1) {
 		switch (c) {
 			case 'r': opt_root = optarg; break;
 			case 'f': opt_force |= PKG_ADD_FORCE; break;
 			case 'p': opt_force |= PKG_ADD_FORCE_PERM; break;
+			case 'u': break; // compatibility with C++ish pkgutils
 			case 'h': print_usage(argv[0]); exit(0); break;
 			case 'v': pkgutils_version(); exit(0); break;
 			case '?': exit(1); break;
