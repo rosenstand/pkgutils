@@ -50,6 +50,7 @@ install: all
 	install -m 0755 -D pkgutils $(BINDIR)/pkgutils
 	install -m 0755 -D pkgmk $(BINDIR)/pkgmk
 	install -m 0755 -D rejmerge $(BINDIR)/rejmerge
+	install -m 0644 -D libpkgutils.a $(LIBDIR)/libpkgutils.a
 	install -m 0755 -D libpkgutils.so.$(LIBVERSION) \
 	         $(LIBDIR)/libpkgutils.so.$(LIBVERSION)
 	ln -s libpkgutils.so.$(LIBVERSION) $(LIBDIR)/libpkgutils.so
