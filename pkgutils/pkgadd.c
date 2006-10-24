@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pkgutils/pkgutils.h>
+#include "entry.h"
 
 static
 int opt_force;
@@ -66,7 +67,7 @@ void parse_opts(int argc, char *argv[]) {
 	return;
 }
 
-int main(int argc, char *argv[]) {
+int PKGADD_ENTRY(int argc, char *argv[]) {
 	int found_conflicts;
 
 	opt_root = "/";

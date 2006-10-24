@@ -32,6 +32,7 @@
 #include <regex.h>
 #include <pkgutils/pkgutils.h>
 #include <pkgutils/filemode.h>
+#include "entry.h"
 
 static
 int opt_installed;
@@ -196,7 +197,7 @@ int installed() {
 	return 0;
 }
 
-int main(int argc, char *argv[]) {
+int PKGINFO_ENTRY(int argc, char *argv[]) {
 	int ret = 1;
 	opt_root = "/";
 	parse_opts(argc, argv);

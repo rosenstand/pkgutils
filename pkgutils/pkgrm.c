@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <pkgutils/pkgutils.h>
+#include "entry.h"
 
 static
 void print_usage(const char *argv0) {
@@ -58,7 +59,7 @@ void parse_opts(int argc, char *argv[]) {
 	return;
 }
 
-int main(int argc, char *argv[]) {
+int PKGRM_ENTRY(int argc, char *argv[]) {
 	opt_root = "/";
 	parse_opts(argc, argv);
 	pkg_init_db();
