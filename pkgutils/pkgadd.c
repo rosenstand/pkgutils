@@ -42,28 +42,19 @@ static
 void parse_opts(int argc, char *argv[]) {
 	char c;
 	struct option opts[] = {
-		{"root",         1, NULL, 'r'},
-		{"force",        0, NULL, 'f'},
-		{"force-perms",  0, NULL, 'p'},
-		{NULL,0,NULL,0}
+		{"root"       , 1, NULL, 'r'},
+		{"force"      , 0, NULL, 'f'},
+		{"force-perms", 0, NULL, 'p'},
+		{NULL         , 0, NULL, 0}
 	};
 
 	while ((c = getopt_long(argc, argv, "r:fp", opts, NULL)) != -1) {
 		switch (c) {
-			case 'r':
-				opt_root = optarg;
-				break;
-			case 'f':
-				opt_force |= PKG_ADD_FORCE;
-				break;
-			case 'p':
-				opt_force |= PKG_ADD_FORCE_PERM;
-				break;
-			case '?':
-				exit(1);
-				break;
-			default:
-				break;
+			case 'r': opt_root = optarg; break;
+			case 'f': opt_force |= PKG_ADD_FORCE; break;
+			case 'p': opt_force |= PKG_ADD_FORCE_PERM; break;
+			case '?': exit(1); break;
+			default: break;
 		}
 	}
 

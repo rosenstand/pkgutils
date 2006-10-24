@@ -38,20 +38,15 @@ static
 void parse_opts(int argc, char *argv[]) {
 	char c;
 	struct option opts[] = {
-		{"root",         1, NULL, 'r'},
-		{NULL,0,NULL,0}
+		{"root", 1, NULL, 'r'},
+		{NULL  , 0, NULL, 0}
 	};
 
 	while ((c = getopt_long(argc, argv, "r:fp", opts, NULL)) != -1) {
 		switch (c) {
-			case 'r':
-				opt_root = optarg;
-				break;
-			case '?':
-				exit(1);
-				break;
-			default:
-				break;
+			case 'r': opt_root = optarg; break;
+			case '?': exit(1); break;
+			default: break;
 		}
 	}
 
