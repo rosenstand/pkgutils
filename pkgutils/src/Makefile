@@ -33,7 +33,7 @@ pkgrm: pkgrm.c
 pkginfo: pkginfo.c
 	$(CC) $(CFLAGS) $@.c $(LDFLAGS) -o $@ -lpkgutils
 
-pkgutils: pkgutils.c
+pkgutils: pkgadd.c pkgrm.c pkginfo.c pkgutils.c
 	$(CC) $(CFLAGS) -DSTATIC -static pkgadd.c pkgrm.c pkginfo.c $@.c \
 		 -o $@ libpkgutils.a $(LDFLAGS)
 

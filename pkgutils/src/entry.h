@@ -26,9 +26,9 @@
 	#define PKGADD_ENTRY  pkgadd_main
 	#define PKGRM_ENTRY   pkgrm_main
 	#define PKGINFO_ENTRY pkginfo_main
-	int PKGADD_ENTRY(int, char **);
-	int PKGRM_ENTRY(int, char **);
-	int PKGINFO_ENTRY(int, char **);
+	int PKGADD_ENTRY(int argc, char *argv[]);
+	int PKGRM_ENTRY(int argc, char *argv[]);
+	int PKGINFO_ENTRY(int argc, char *argv[]);
 #else
 	#define PKGADD_ENTRY  main
 	#define PKGRM_ENTRY   main
