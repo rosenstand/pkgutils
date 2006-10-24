@@ -27,6 +27,18 @@
 #include <errno.h>
 #include <pkgutils/pkgutils.h>
 
+void pkgutils_version() {
+	puts("pkgutils-c "VERSION" (C rewrite)\n\n"
+	     "Copyright (C) 2006  Anton Vorontsov\n"
+	     "This is free software.  You may redistribute copies of it \n"
+	     "under the terms of the GNU General Public License \n"
+	     "<http://www.gnu.org/licenses/gpl.html>.\n"
+	     "There is NO WARRANTY, to the extent permitted by law.\n"
+	     "Original pkgutils:\n"
+	     "Copyright (C) 2000-2005 by Per Liden <per@fukt.bth.se>");
+	return;
+}
+
 int die(const char *str) {
 	printf("%s: ", str);
 	puts(strerror(errno));

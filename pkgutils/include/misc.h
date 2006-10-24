@@ -27,7 +27,7 @@
 
 typedef void (*do_archive_fun_t)(struct archive *ar, struct archive_entry *en,
                                  void *arg1, void *arg2);
-
+void pkgutils_version();
 int die(const char *str);
 void *fmalloc(size_t size);
 const char *base_filename(const char *name);

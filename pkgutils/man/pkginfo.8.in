@@ -1,4 +1,4 @@
-.TH pkginfo 8 "" "pkgutils #VERSION#" ""
+.TH pkginfo 8 "" "pkgutils-c #VERSION#" ""
 .SH NAME
 pkginfo \- display software package information
 .SH SYNOPSIS

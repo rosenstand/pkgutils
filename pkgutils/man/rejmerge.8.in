@@ -1,4 +1,4 @@
-.TH rejmerge 8 "" "pkgutils #VERSION#" ""
+.TH rejmerge 8 "" "pkgutils-c #VERSION#" ""
 .SH NAME
 rejmerge \- merge files that were rejected during package upgrades
 .SH SYNOPSIS

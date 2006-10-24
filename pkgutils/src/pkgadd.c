@@ -32,10 +32,12 @@ int opt_force;
 
 static
 void print_usage(const char *argv0) {
-	printf("Usage: %s [-rfp] <package>\n", argv0);
-	puts("  -r  --root         specify alternate root\n"
-	     "  -f  --force        ignore database and filesystem conflicts\n"
-	     "  -p  --force-perms  ignore permissions conflicts");
+	printf("Usage: %s [-fprhv] <package>\n", argv0);
+	puts("  -f  --force         ignore database and filesystem conflicts\n"
+	     "  -p  --force-perms   ignore permissions conflicts\n"
+	     "  -r  --root          specify alternate root\n"
+	     "  -h  --help          display this help\n"
+	     "  -v  --version       display version information");
 	return;
 }
 
@@ -43,17 +45,21 @@ static
 void parse_opts(int argc, char *argv[]) {
 	char c;
 	struct option opts[] = {
-		{"root"       , 1, NULL, 'r'},
 		{"force"      , 0, NULL, 'f'},
 		{"force-perms", 0, NULL, 'p'},
+		{"root"       , 1, NULL, 'r'},
+		{"help"       , 0, NULL, 'h'},
+		{"version"    , 0, NULL, 'v'},
 		{NULL         , 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "r:fp", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "fpr:hv", opts, NULL)) != -1) {
 		switch (c) {
 			case 'r': opt_root = optarg; break;
 			case 'f': opt_force |= PKG_ADD_FORCE; break;
 			case 'p': opt_force |= PKG_ADD_FORCE_PERM; break;
+			case 'h': print_usage(argv[0]); exit(0); break;
+			case 'v': pkgutils_version(); exit(0); break;
 			case '?': exit(1); break;
 			default: break;
 		}

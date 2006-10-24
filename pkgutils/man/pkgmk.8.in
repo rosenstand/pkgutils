@@ -1,4 +1,4 @@
-.TH pkgmk 8 "" "pkgutils #VERSION#" ""
+.TH pkgmk 8 "" "pkgutils-c #VERSION#" ""
 .SH NAME
 pkgmk \- make software package
 .SH SYNOPSIS

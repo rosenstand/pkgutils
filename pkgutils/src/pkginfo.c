@@ -48,7 +48,9 @@ void print_usage(const char *argv0) {
 	     "  -l  --list <package|file> list files for file or package\n"
 	     "  -o  --owner <pattern>     print package owner\n"
 	     "  -f  --footprint <file>    print footprint for <file>\n"
-	     "  -r  --root                specify alternate root");
+	     "  -r  --root                specify alternate root\n"
+	     "  -h  --help                display this help\n"
+	     "  -v  --version             display version information");
 	return;
 }
 
@@ -56,21 +58,25 @@ static
 void parse_opts(int argc, char *argv[]) {
 	char c;
 	struct option opts[] = {
-		{"root"     ,    1, NULL, 'r'},
 		{"installed",    0, NULL, 'i'},
 		{"list"     ,    1, NULL, 'l'},
 		{"owner"    ,    1, NULL, 'o'},
 		{"footprint",    1, NULL, 'f'},
+		{"root"     ,    1, NULL, 'r'},
+		{"help"     ,    0, NULL, 'h'},
+		{"version"  ,    0, NULL, 'v'},
 		{NULL       ,    0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "r:il:o:f:", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv,"il:o:f:r:hv", opts, NULL)) != -1) {
 		switch (c) {
-			case 'r': opt_root = optarg; break;
 			case 'i': opt_installed = 1; break;
 			case 'l': opt_list = optarg; break;
 			case 'o': opt_owner = optarg; break;
 			case 'f': opt_footprint = optarg; break;
+			case 'r': opt_root = optarg; break;
+			case 'h': print_usage(argv[0]); exit(0); break;
+			case 'v': pkgutils_version(); exit(0); break;
 			case '?': exit(1); break;
 			default: break;
 		}

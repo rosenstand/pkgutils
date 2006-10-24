@@ -1,4 +1,4 @@
-.TH pkgrm 8 "" "pkgutils #VERSION#" ""
+.TH pkgrm 8 "" "pkgutils-c #VERSION#" ""
 .SH NAME
 pkgrm \- remove software package
 .SH SYNOPSIS
