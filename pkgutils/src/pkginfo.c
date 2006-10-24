@@ -155,6 +155,7 @@ int owner() {
 	list_for_each(_pair, &pairs) {
 		struct pkg_file_pair *pair = _pair->data;
 		printf("%-*s %s\n", width, pair->pkg->name, pair->file->path);
+		free(pair);
 	}
 
 	list_free(&pairs);
