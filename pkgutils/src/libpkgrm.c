@@ -27,14 +27,73 @@
 
 #include <pkgutils/pkgutils.h>
 
+int comparr(const void *a, const void *b) {
+	pkg_file_t *filea = (*(const list_entry_t **)a)->data;
+	pkg_file_t *fileb = (*(const list_entry_t **)b)->data;
+	return strcmp(filea->path, fileb->path);
+}
+
 // Delete from the list files which referenced by other packages.
 // Thus they will not removed from the filesystem.
 static
 void delete_refs(pkg_desc_t *pkg2rm) {
+	size_t dbsize = 0, cnt;
+	list_entry_t **dbfiles, **pkgfiles;
+
+	// creating db files sorted array
+	list_for_each(_dbpkg, &pkg_db) {
+		pkg_desc_t *dbpkg = _dbpkg->data;
+		if (dbpkg == pkg2rm) continue;
+		dbsize += dbpkg->files.size;
+	}
+	printf("size: %d\n", dbsize);
+
+	dbfiles = fmalloc(dbsize * sizeof(void*));
+	cnt = 0;
 	list_for_each(_dbpkg, &pkg_db) {
 		pkg_desc_t *dbpkg = _dbpkg->data;
 		if (dbpkg == pkg2rm) continue;
 		list_for_each(_dbfile, &dbpkg->files) {
+			dbfiles[cnt] = _dbfile;
+			cnt++;
+		}
+	}
+	qsort(dbfiles, dbsize, sizeof(void*), comparr);
+
+	// creating pkg files sorted array
+	pkgfiles = fmalloc(pkg2rm->files.size * sizeof(void*));
+	cnt = 0;
+	list_for_each(_file, &pkg2rm->files) {
+		pkgfiles[cnt] = _file;
+		cnt++;
+	}
+	qsort(pkgfiles, pkg2rm->files.size, sizeof(void*), comparr);
+
+	// find intersection
+	size_t next = 0;
+	for (int i = 0; i < pkg2rm->files.size; i++) {
+		pkg_file_t *pkgfile = pkgfiles[i]->data;
+		for (size_t j = next; j < dbsize; j++) {
+			pkg_file_t *dbfile = dbfiles[j]->data;
+			int cmp = strcmp(dbfile->path, pkgfile->path);
+			if (cmp < 0) continue;
+			else if (cmp > 0) break;
+			else {
+				next = j+1;
+				while (next < dbsize) {
+					pkg_file_t *dbfile2;
+					dbfile2 = dbfiles[next]->data;
+					if (strcmp(dbfile->path,
+					           dbfile2->path)) break;
+					next++;
+				}
+				puts(pkgfile->path);
+				break;
+			}
+		}
+	}
+
+		/*list_for_each(_dbfile, &dbpkg->files) {
 			pkg_file_t *dbfile = _dbfile->data;
 			list_for_each(_file2rm, &pkg2rm->files) {
 				pkg_file_t *file2rm = _file2rm->data;
@@ -46,8 +105,8 @@ void delete_refs(pkg_desc_t *pkg2rm) {
 					            _file2rm->next);
 				}
 			}
-		}
-	}
+		}*/
+
 	return;
 }
 
@@ -90,6 +149,7 @@ int pkg_rm(const char *pkg_name) {
 	}
 
 	delete_refs(pkg2rm);
+	return 1;
 	remove_from_fs(pkg2rm);
 
 	free(pkg2rm->name);
