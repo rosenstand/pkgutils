@@ -31,6 +31,13 @@ void pkgutils_version();
 int die(const char *str);
 void *fmalloc(size_t size);
 const char *base_filename(const char *name);
+
+int pkg_cmp(const void *a, const void *b);
+void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
+                    int (*cmpf)(const void *a, const void *b),
+                    void (*intef)(void **ai, void **bj, void *arg),
+                    void (*uniqf)(void **ai, void *arg),
+		    void *arg);
 pkg_desc_t *pkg_find_pkg(const char *name);
 int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg);
 int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,

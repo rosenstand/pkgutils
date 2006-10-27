@@ -182,6 +182,56 @@ int adjust_with_fs(pkg_desc_t *pkg, list_t *conflicts) {
 	return 0;
 }
 
+
+static
+int adjust_with_fs2(pkg_desc_t *pkg) {
+	struct stat st;
+	size_t root_size = strlen(opt_root);
+	char *tmp;
+	size_t path_size = 0;
+
+	list_for_each(_pkg_file, &pkg->files) {
+		pkg_file_t *pkg_file = _pkg_file->data;
+		path_size = MAX(path_size, strlen(pkg_file->path));
+	}
+	tmp = fmalloc(path_size + root_size + 1);
+	strcpy(tmp, opt_root);
+
+	list_for_each(_pkg_file, &pkg->files) {
+		pkg_file_t *pkg_file = _pkg_file->data;
+		tmp[root_size] = '\0';
+		strcat(tmp, pkg_file->path);
+
+		if (lstat(tmp, &st) != 0) continue;
+		
+		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
+			if (stat(tmp, &st) != 0) {
+				printf("can't stat %s", tmp);
+				die("");
+			}
+			if (S_ISDIR(st.st_mode)) {
+				dbg("%s stored as LINK\n", tmp);
+				pkg_file->mode &= ~S_IFDIR;
+				pkg_file->mode |= S_IFLNK;
+				pkg_file->conflict = CONFLICT_LINK;
+			}
+		}
+		else if (S_ISDIR(pkg_file->mode) && (
+		                           pkg_file->mode != st.st_mode
+		                        || pkg_file->uid != st.st_uid
+		                        || pkg_file->gid != st.st_gid)) {
+				pkg_file->conflict = CONFLICT_PERM;
+		}
+		else if (S_ISDIR(pkg_file->mode) ||
+		         pkg_file->conflict | (CONFLICT_SELF & CONFLICT_DB)) {
+			continue;
+		}
+	}
+
+	free(tmp);
+	return 0;
+}
+
 // When upgrading (old_pkg != NULL), then append directories which is
 // referenced by other packages. They'll not removed while upgrading.
 static
@@ -245,6 +295,7 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg,
 	return;
 }
 
+
 static
 int should_reject(const char *path, list_t *conflicts) {
 	int reject = 0;
@@ -264,6 +315,131 @@ int should_reject(const char *path, list_t *conflicts) {
 		break;
 	}
 	return reject;
+}
+
+static
+int should_reject2(const char *path) {
+	int reject = 0;
+	list_for_each(_rule, &config_rules) {
+		rule_t *rule = _rule->data;
+		if (rule->type != UPGRADE) continue;
+		if (!regexec(&rule->regex, path, 0, NULL, 0)) {
+			if (!rule->yes) reject = 1;
+			else reject = 0;
+		}
+	}
+	return reject;
+}
+
+static
+void del_reference(void **ai, void **bj, void *arg) {
+        pkg_desc_t *old_pkg = arg;
+	pkg_file_t *old_pkgfile = (*(list_entry_t**)ai)->data;
+	
+	if (old_pkgfile->conflict != CONFLICT_REF) {
+		dbg("ref deleted %s\n", old_pkgfile->path);
+		free(old_pkgfile->path);
+		free(old_pkgfile);
+		list_delete(&old_pkg->files, *(list_entry_t**)ai);
+	}
+ 
+	return;
+}
+
+static
+void self_conflict(void **ai, void **bj, void *unused) {
+	pkg_file_t *new_pkgfile = (*(list_entry_t**)ai)->data;
+	pkg_file_t *old_pkgfile = (*(list_entry_t**)bj)->data;
+	
+	new_pkgfile->conflict = CONFLICT_SELF;
+	old_pkgfile->conflict = CONFLICT_REF;
+
+	printf("s %s\n", new_pkgfile->path);
+	return;
+}
+
+static
+void db_conflict(void **ai, void **bj, void *arg) {
+	pkg_file_t *new_pkgfile = (*(list_entry_t**)ai)->data;
+	pkg_file_t *dbfile = (*(list_entry_t**)bj)->data;
+	pkg_desc_t *old_pkg = arg;
+	
+	// directories can't conflict. sanity tests (e.g. new file is not a
+	// dir, but db file is) made while finding fs conflicts, not here.
+	if (!S_ISDIR(new_pkgfile->mode)) {
+		new_pkgfile->conflict = CONFLICT_DB;
+		printf("d %s\n", new_pkgfile->path);
+	}
+	return;
+}
+
+static
+void adjust_with_db2(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
+	void **dbfiles, **newfiles, **oldfiles = NULL;
+	size_t dbsize = 0;
+	size_t cnt;
+
+	list_for_each(_pkg, &pkg_db) {
+		pkg_desc_t *pkg = _pkg->data;
+		if (pkg == old_pkg) continue;
+		dbsize += pkg->files.size;
+	}
+	
+	// creating dbfiles sorted array
+	dbfiles = fmalloc(dbsize * sizeof(void *));
+	cnt = 0;
+	list_for_each(_pkg, &pkg_db) {
+		pkg_desc_t *pkg = _pkg->data;
+		if (pkg == old_pkg) continue;
+		list_for_each(_file, &pkg->files) {
+			dbfiles[cnt] = _file;
+			cnt++;
+		}
+	}
+	qsort(dbfiles, dbsize, sizeof(void *), pkg_cmp);
+
+	// creating newfiles sorted array
+	newfiles = fmalloc(new_pkg->files.size * sizeof(void *));
+	cnt = 0;
+	list_for_each(_file, &new_pkg->files) {
+		newfiles[cnt] = _file;
+		cnt++;
+	}
+	qsort(newfiles, new_pkg->files.size, sizeof(void *), pkg_cmp);
+
+	// intersections between dbfiles and newfiles are db conflicts
+	intersect_uniq(newfiles, new_pkg->files.size, dbfiles, dbsize,
+	               pkg_cmp, db_conflict, NULL, old_pkg);
+	
+	if (old_pkg) {
+		// creating oldfiles sorted array
+		oldfiles = fmalloc(old_pkg->files.size * sizeof(void *));
+		cnt = 0;
+		list_for_each(_file, &old_pkg->files) {
+			oldfiles[cnt] = _file;
+			cnt++;
+		}
+		qsort(oldfiles, old_pkg->files.size, sizeof(void *), pkg_cmp);
+
+		// intersections between newfiles and oldfiles are self
+		// conflicts to newfiles, and ref conflicts to oldfiles
+		intersect_uniq(newfiles, new_pkg->files.size,
+		               oldfiles, old_pkg->files.size,
+		               pkg_cmp, self_conflict, NULL, NULL);
+		
+		// intersections between oldfiles and dbfiles are references
+		// which must be removed from oldfiles, except those which is
+		// marked already as referencing to newpkg at previous step
+		intersect_uniq(oldfiles, old_pkg->files.size,
+		               dbfiles, dbsize,
+		               pkg_cmp, del_reference, NULL, old_pkg);
+
+		free(oldfiles);
+	}
+	
+	free(newfiles);
+	free(dbfiles);
+	return;
 }
 
 static
@@ -321,9 +497,9 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 }
 
 static
-void list_files(struct archive *ar, struct archive_entry *en, void *_files,
+void list_files(struct archive *ar, struct archive_entry *en, void *_pkg,
                 void *unused) {
-	list_t *files = _files;
+	pkg_desc_t *pkg = _pkg;
 	const char *cpath;
 	mode_t mode;
 	char *path;
@@ -336,11 +512,13 @@ void list_files(struct archive *ar, struct archive_entry *en, void *_files,
 	if (S_ISDIR(mode)) path[strlen(path)-1] = '\0';
 	
 	pkg_file_t *pkg_file = fmalloc(sizeof(pkg_file_t));
+	pkg_file->pkg = pkg;
+	pkg_file->conflict = CONFLICT_NONE;
 	pkg_file->path = path;
 	pkg_file->mode = mode;
 	pkg_file->uid  = archive_entry_uid(en);
 	pkg_file->gid  = archive_entry_gid(en);
-	list_append(files, pkg_file);
+	list_append(&pkg->files, pkg_file);
 
 	return;
 }
@@ -554,10 +732,13 @@ int pkg_add(const char *pkg_path, int opts) {
 	}
 	
 	list_init(&pkg.files);
-	if (do_archive(pkg_path, list_files, &pkg.files, NULL)) abort();
+	if (do_archive(pkg_path, list_files, &pkg, NULL)) abort();
 
 	list_init(&conflicts);
 	old_pkg = pkg_find_pkg(pkg.name);
+	adjust_with_db2(&pkg, old_pkg);
+	adjust_with_fs2(&pkg);
+	return -1;
 	adjust_with_db(&pkg, old_pkg, &conflicts);
 	adjust_with_fs(&pkg, &conflicts);
 	found_conflicts = report_conflicts(&conflicts);

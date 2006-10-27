@@ -81,6 +81,7 @@ void pkg_read_db(FILE *pkg_db_file) {
 				break;
 			default:
 				file = fmalloc(sizeof(pkg_file_t));
+				file->pkg = pkg;
 				file->path = fmalloc(line_size);
 				strcpy(file->path, line);
 				line_size = strlen(file->path) + 1;

@@ -65,6 +65,40 @@ const char *base_filename(const char *name) {
 	return name;
 }
 
+int pkg_cmp(const void *a, const void *b) {
+	pkg_file_t *filea = (*(const list_entry_t **)a)->data;
+	pkg_file_t *fileb = (*(const list_entry_t **)b)->data;
+	return strcmp(filea->path, fileb->path);
+}
+
+// find intersection
+void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
+                    int (*cmpf)(const void *a, const void *b),
+                    void (*intef)(void **ai, void **bj, void *arg),
+                    void (*uniqf)(void **ai, void *arg),
+		    void *arg) {
+	size_t next = 0;
+	int cmp = 1;
+	for (int i = 0; i < asz; i++) {
+		for (size_t j = next; j < bsz; j++) {
+			cmp = cmpf(&b[j], &a[i]);
+			if (cmp < 0) continue;
+			else if (cmp > 0) break;
+			else {
+				next = j+1;
+				while (next < bsz) {
+					if (cmpf(&b[j], &b[next])) break;
+					next++;
+				}
+				if (intef) intef(&a[i], &b[j], arg);
+				break;
+			}
+		}
+		if (cmp != 0 && uniqf) uniqf(&a[i], arg);
+	}
+	return;
+}
+
 pkg_desc_t *pkg_find_pkg(const char *name) {
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
@@ -123,8 +157,8 @@ int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
 
 	ar = archive_read_new();
 	if (!ar) malloc_failed();
-	archive_read_support_compression_all(ar);
-	archive_read_support_format_all(ar);
+	archive_read_support_compression_gzip(ar);
+	archive_read_support_format_tar(ar);
 	if (archive_read_open_filename(ar, pkg_path, 1024) != ARCHIVE_OK) {
 		puts(archive_error_string(ar));
 		err = -1;

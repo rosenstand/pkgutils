@@ -24,17 +24,19 @@
 #include <sys/types.h>
 
 typedef struct {
+	char *name;
+	char *version;
+	list_t files;  // pkg_files_t list
+} pkg_desc_t;
+
+typedef struct {
+	pkg_desc_t *pkg;
+	int conflict;
 	char *path;
 	mode_t mode;
 	uid_t uid;
 	gid_t gid;
 } pkg_file_t;
-
-typedef struct {
-	char *name;
-	char *version;
-	list_t files;  // pkg_files_t list
-} pkg_desc_t;
 
 typedef enum {
 	CONFLICT_NONE = 0,  // gag

@@ -1,9 +1,9 @@
 include ../Makefile.h
 
 CC = gcc -std=c99
-CFLAGS += -Wall -I../include -DVERSION=\"$(VERSION)\"
+CFLAGS += -Wall -I../include -DVERSION=\"$(VERSION)\" -DDEBUG
 CFLAGS += $(LIBARCHIVE_CFLAGS)
-LDFLAGS += -L. -larchive
+LDFLAGS += -L.
 LDFLAGS += $(LIBARCHIVE_LDFLAGS)
 
 OBJS = list.o misc.o libpkgdb.o libpkgadd.o libpkgrm.o filemode.o
