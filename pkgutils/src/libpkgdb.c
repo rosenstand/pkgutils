@@ -131,7 +131,7 @@ void pkg_init_db() {
 	list_init(&pkg_db);
 	pkg_read_db(pkg_db_file);
 
-	fclose(pkg_db_file) && die("can't close db file");
+	if (fclose(pkg_db_file)) die("can't close db file");
 	free(dbpath);
 	return;
 }
