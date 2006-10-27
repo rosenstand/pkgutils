@@ -21,7 +21,7 @@ build() {
 	make LIBARCHIVE_CFLAGS="-I$PKG/usr/include"   \
 	     LIBARCHIVE_LDFLAGS="-L$PKG/usr/lib/ -lz"
 	rm -rf $PKG/usr
-	make install DESTDIR=$PKG
+	make install DESTDIR=$PKG PREFIX=/usr
 
 	mv $PKG/usr/bin/pkgutils $PKG/usr/bin/pkgadd
 	ln -sf pkgadd $PKG/usr/bin/pkgrm
