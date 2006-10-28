@@ -57,52 +57,47 @@ void cleanup_conflicts(list_t *conflicts) {
 }
 
 static
-int report_conflicts(list_t *conflicts) {
+int report_conflicts(pkg_desc_t *pkg) {
 	int types = CONFLICT_NONE;
-	pkg_conflict_t *conflict;
+	pkg_file_t *file;
 
-	list_for_each(_conflict, conflicts) {
-		conflict = _conflict->data;
-		switch (conflict->type) {
+	list_for_each(_file, &pkg->files) {
+		file = _file->data;
+		switch (file->conflict) {
 			case CONFLICT_DB: 
 			case CONFLICT_FS:
 			case CONFLICT_PERM:
-				types |= conflict->type;
-				break;
-			default:
-				break;
+				types |= file->conflict; break;
+			default: break;
 		}
 		
 	}
 
 	if (types & CONFLICT_DB) {
 		puts("Following files conflicting with database:");
-		list_for_each(_conflict, conflicts) {
-			conflict = _conflict->data;
-			if (conflict->type == CONFLICT_DB)
-				puts(conflict->file->path);
+		list_for_each(_file, &pkg->files) {
+			file = _file->data;
+			if (file->conflict == CONFLICT_DB) puts(file->path);
 		}
 		puts("");
 	}
 	if (types & CONFLICT_FS) {
 		puts("Following files conflicting with filesystem:");
-		list_for_each(_conflict, conflicts) {
-			conflict = _conflict->data;
-			if (conflict->type == CONFLICT_FS)
-				puts(conflict->file->path);
+		list_for_each(_file, &pkg->files) {
+			file = _file->data;
+			if (file->conflict == CONFLICT_FS) puts(file->path);
 		}
 		puts("");
 	}
 	if (types & CONFLICT_PERM) {
 		puts("Following files conflicting by mode or ownership:");
-		list_for_each(_conflict, conflicts) {
-			conflict = _conflict->data;
-			if (conflict->type == CONFLICT_PERM)
-				puts(conflict->file->path);
+		list_for_each(_file, &pkg->files) {
+			file = _file->data;
+			if (file->conflict == CONFLICT_PERM) puts(file->path);
 		}
 		puts("");
 	}
-
+	
 	return types;
 }
 
@@ -118,83 +113,11 @@ pkg_conflict_t *is_conflicts(list_t *conflicts, const char *path,
 }
 
 static
-int adjust_with_fs(pkg_desc_t *pkg, list_t *conflicts) {
+int adjust_with_fs(pkg_desc_t *pkg) {
 	struct stat st;
 	size_t root_size = strlen(opt_root);
-	char *tmp;
-	size_t path_size = 0;
-	pkg_conflict_t *conflict;
-
-	list_for_each(_pkg_file, &pkg->files) {
-		pkg_file_t *pkg_file = _pkg_file->data;
-		path_size = MAX(path_size, strlen(pkg_file->path));
-	}
-	tmp = fmalloc(path_size + root_size + 1);
-	strcpy(tmp, opt_root);
-
-	list_for_each(_pkg_file, &pkg->files) {
-		pkg_file_t *pkg_file = _pkg_file->data;
-		tmp[root_size] = '\0';
-		strcat(tmp, pkg_file->path);
-
-		if (lstat(tmp, &st) != 0) continue;
-		
-		pkg_conflict_type_t conflict_type = CONFLICT_FS;
-		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
-			if (stat(tmp, &st) != 0) {
-				printf("can't stat %s", tmp);
-				die("");
-			}
-			if (S_ISDIR(st.st_mode)) {
-				dbg("%s stored as LINK\n", tmp);
-				pkg_file->mode &= ~S_IFDIR;
-				pkg_file->mode |= S_IFLNK;
-				conflict = is_conflicts(conflicts,
-				                        pkg_file->path,
-				                        CONFLICT_DB);
-				if (conflict) {
-					conflict->type = CONFLICT_LINK;
-					continue;
-				}
-				conflict_type = CONFLICT_LINK;
-			}
-		}
-		else if (S_ISDIR(pkg_file->mode) && (
-		                           pkg_file->mode != st.st_mode
-		                        || pkg_file->uid != st.st_uid
-		                        || pkg_file->gid != st.st_gid)) {
-				conflict_type = CONFLICT_PERM;
-		}
-		else if (S_ISDIR(pkg_file->mode) ||
-		         is_conflicts(conflicts, pkg_file->path,
-		                      CONFLICT_SELF | CONFLICT_DB)) {
-			continue;
-		}
-
-		conflict = fmalloc(sizeof(pkg_conflict_t));
-		conflict->pkg = pkg;
-		conflict->file = pkg_file;
-		conflict->type = conflict_type;
-		list_append(conflicts, conflict);
-	}
-
-	free(tmp);
-	return 0;
-}
-
-
-static
-int adjust_with_fs2(pkg_desc_t *pkg) {
-	struct stat st;
-	size_t root_size = strlen(opt_root);
-	char *tmp;
-	size_t path_size = 0;
-
-	list_for_each(_pkg_file, &pkg->files) {
-		pkg_file_t *pkg_file = _pkg_file->data;
-		path_size = MAX(path_size, strlen(pkg_file->path));
-	}
-	tmp = fmalloc(path_size + root_size + 1);
+	char tmp[MAXPATHLEN];
+	
 	strcpy(tmp, opt_root);
 
 	list_for_each(_pkg_file, &pkg->files) {
@@ -215,86 +138,23 @@ int adjust_with_fs2(pkg_desc_t *pkg) {
 				pkg_file->mode |= S_IFLNK;
 				pkg_file->conflict = CONFLICT_LINK;
 			}
+			else pkg_file->conflict = CONFLICT_PERM;
 		}
 		else if (S_ISDIR(pkg_file->mode) && (
 		                           pkg_file->mode != st.st_mode
 		                        || pkg_file->uid != st.st_uid
 		                        || pkg_file->gid != st.st_gid)) {
-				pkg_file->conflict = CONFLICT_PERM;
+			pkg_file->conflict = CONFLICT_PERM;
 		}
-		else if (S_ISDIR(pkg_file->mode) ||
-		         pkg_file->conflict | (CONFLICT_SELF & CONFLICT_DB)) {
-			continue;
+		else if (!S_ISDIR(pkg_file->mode) &&
+		                   pkg_file->conflict != CONFLICT_DB &&
+		                   pkg_file->conflict != CONFLICT_SELF) {
+			pkg_file->conflict = CONFLICT_FS;
 		}
 	}
 
-	free(tmp);
 	return 0;
 }
-
-// When upgrading (old_pkg != NULL), then append directories which is
-// referenced by other packages. They'll not removed while upgrading.
-static
-void find_db_refs(pkg_desc_t *old_pkg, list_t *conflicts, pkg_desc_t *db_pkg,
-                  pkg_file_t *db_file) {
-	if (!old_pkg || db_pkg == old_pkg) return;
-	
-	list_for_each(_file, &old_pkg->files) {
-		pkg_file_t *file = _file->data;
-		if (strcmp(db_file->path, file->path)) {
-			pkg_conflict_t *conflict;
-			conflict = fmalloc(sizeof(pkg_conflict_t));
-			conflict->type = CONFLICT_REF;
-			conflict->pkg = db_pkg;
-			conflict->file = db_file;
-			list_append(conflicts,conflict);
-			break;
-		}
-	}
-	return;
-}
-
-static
-void find_db_conflicts(pkg_desc_t *new_pkg, list_t *conflicts,
-		pkg_desc_t *db_pkg, pkg_file_t *db_file) {
-	pkg_conflict_t *conflict, tmp;
-	list_for_each(_new_pkg_file, &new_pkg->files) {
-		pkg_file_t *new_pkg_file = _new_pkg_file->data;
-		if (!strcmp(new_pkg_file->path, db_file->path)) {
-			if (!strcmp(new_pkg->name, db_pkg->name)) {
-				tmp.type = CONFLICT_SELF;
-				tmp.pkg = new_pkg;
-				tmp.file = new_pkg_file;
-			}
-			else if (!S_ISDIR(db_file->mode)) {
-				tmp.type = CONFLICT_DB;
-				tmp.pkg = db_pkg;
-				tmp.file = db_file;
-			}
-			else continue;
-
-			conflict = fmalloc(sizeof(pkg_conflict_t));
-			*conflict = tmp;
-			list_append(conflicts, conflict);
-		}
-	}
-	return;
-}
-
-static
-void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg,
-                    list_t *conflicts) {
-	list_for_each(_db_pkg, &pkg_db) {
-		pkg_desc_t *db_pkg = _db_pkg->data;
-		list_for_each(_db_file, &db_pkg->files) {
-			pkg_file_t *db_file = _db_file->data;
-			find_db_conflicts(new_pkg, conflicts, db_pkg, db_file);
-			find_db_refs(old_pkg, conflicts, db_pkg, db_file);
-		}
-	}
-	return;
-}
-
 
 static
 int should_reject(const char *path, list_t *conflicts) {
@@ -374,7 +234,7 @@ void db_conflict(void **ai, void **bj, void *arg) {
 }
 
 static
-void adjust_with_db2(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
+void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 	void **dbfiles, **newfiles, **oldfiles = NULL;
 	size_t dbsize = 0;
 	size_t cnt;
@@ -534,77 +394,6 @@ void cleanup_config() {
 	return;
 }
 
-// This function transforms string
-// from: "abc \"def ghi\""
-//   to: "abc\0def ghi\0"
-// Returns count of fields fetched (2 in that example).
-int proceed_config_line(char *line) {
-	size_t i = 0, j = 0, n = 0;
-	int esc = 0, quo = 0, skip = 0;
-	
-	while (1) {
-		switch (line[i]) {
-			case '\0':
-			case '\n':
-				if (quo) return -1;
-			case '#':
-				if (quo) break;
-				line[j] = '\0';
-				return n;
-				break;
-			case ' ':
-			case '\t':
-				if (quo) break;
-				skip = 1;
-
-				if (line[i+1] != ' ' && line[i+1] != '\t' &&
-				    line[i+1] != '\n' && line[i+1] != '#') {
-					n++;
-					line[j] = '\0';
-					j++;
-				}
-				break;
-			case '\"':
-				if (quo) {
-					if (!esc) {
-						quo = 0;
-						skip = 1;
-					}
-					else esc = 0;
-				}
-				else {
-					quo = 1;
-					skip = 1;
-				}
-				break;
-			case '\\':
-				if (!quo) return -1;
-
-				if (esc) esc = 0;
-				else {
-					esc = 1;
-					skip = 1;
-				}
-				break;
-			default:
-				if (!n) n = 1;
-				esc = 0;
-				break;
-		}
-
-		if (skip) {
-			skip = 0;
-			i++;
-			continue;
-		}
-
-		line[j] = line[i];
-		j++;
-		i++;
-	}
-	return 0;
-}
-
 static
 void read_config() {
 	char *config;
@@ -628,7 +417,7 @@ void read_config() {
 		if (getline(&line, &line_size, f) == -1) break;
 		lineno++;
 
-		tmp = proceed_config_line(line);
+		tmp = fetch_line_fields(line);
 		if (tmp < 0) {
 			fprintf(stderr, "%s: parse error at line %d\n", config,
 			                                               lineno);
@@ -736,12 +525,10 @@ int pkg_add(const char *pkg_path, int opts) {
 
 	list_init(&conflicts);
 	old_pkg = pkg_find_pkg(pkg.name);
-	adjust_with_db2(&pkg, old_pkg);
-	adjust_with_fs2(&pkg);
+	adjust_with_db(&pkg, old_pkg);
+	adjust_with_fs(&pkg);
+	found_conflicts = report_conflicts(&pkg);
 	return -1;
-	adjust_with_db(&pkg, old_pkg, &conflicts);
-	adjust_with_fs(&pkg, &conflicts);
-	found_conflicts = report_conflicts(&conflicts);
 	if (found_conflicts & CONFLICT_PERM && !(opts & PKG_ADD_FORCE_PERM))
 		goto cleanup;
 	if (found_conflicts & ~CONFLICT_PERM && !(opts & PKG_ADD_FORCE))

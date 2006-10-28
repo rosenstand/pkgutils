@@ -185,3 +185,74 @@ failed:
 	archive_read_finish(ar);
 	return err;
 }
+
+// This function transforms string
+// from: "abc \"def ghi\""
+//   to: "abc\0def ghi\0"
+// Returns count of fields fetched (2 in that example), -1 on parse error.
+int fetch_line_fields(char *line) {
+	size_t i = 0, j = 0, n = 0;
+	int esc = 0, quo = 0, skip = 0;
+	
+	while (1) {
+		switch (line[i]) {
+			case '\0':
+			case '\n':
+				if (quo) return -1;
+			case '#':
+				if (quo) break;
+				line[j] = '\0';
+				return n;
+				break;
+			case ' ':
+			case '\t':
+				if (quo) break;
+				skip = 1;
+
+				if (line[i+1] != ' ' && line[i+1] != '\t' &&
+				    line[i+1] != '\n' && line[i+1] != '#') {
+					n++;
+					line[j] = '\0';
+					j++;
+				}
+				break;
+			case '\"':
+				if (quo) {
+					if (!esc) {
+						quo = 0;
+						skip = 1;
+					}
+					else esc = 0;
+				}
+				else {
+					quo = 1;
+					skip = 1;
+				}
+				break;
+			case '\\':
+				if (!quo) return -1;
+
+				if (esc) esc = 0;
+				else {
+					esc = 1;
+					skip = 1;
+				}
+				break;
+			default:
+				if (!n) n = 1;
+				esc = 0;
+				break;
+		}
+
+		if (skip) {
+			skip = 0;
+			i++;
+			continue;
+		}
+
+		line[j] = line[i];
+		j++;
+		i++;
+	}
+	return 0;
+}

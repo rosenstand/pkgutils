@@ -42,6 +42,7 @@ pkg_desc_t *pkg_find_pkg(const char *name);
 int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg);
 int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
                void *arg2);
+int fetch_line_fields(char *line);
 
 #ifdef DEBUG
 #define dbg(str, ...) printf(str, __VA_ARGS__)
