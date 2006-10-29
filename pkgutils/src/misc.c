@@ -149,17 +149,17 @@ failed:
 
 // Calls func for the every archive entry. Handy function, and also eliminates
 // code duplication. Returns 0 if succeeded.
-int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
-               void *arg2) {
+int do_archive(FILE *pkg, do_archive_fun_t func, void *arg1, void *arg2) {
 	struct archive *ar;
 	struct archive_entry *en;
 	int err = 0;
 
+	fseek(pkg, 0L, SEEK_SET);
 	ar = archive_read_new();
 	if (!ar) malloc_failed();
 	archive_read_support_compression_gzip(ar);
 	archive_read_support_format_tar(ar);
-	if (archive_read_open_filename(ar, pkg_path, 1024) != ARCHIVE_OK) {
+	if (archive_read_open_FILE(ar, pkg) != ARCHIVE_OK) {
 		puts(archive_error_string(ar));
 		err = -1;
 		goto failed;
@@ -183,6 +183,21 @@ int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
 
 failed:
 	archive_read_finish(ar);
+	return err;
+}
+
+int do_archive_once(const char *fname, do_archive_fun_t func, void *arg1,
+                    void *arg2) {
+	FILE *pkgf;
+	int err;
+	pkgf = fopen(fname, "r");
+	if (!pkgf) {
+		fprintf(stderr, "Can't open %s: %s\n", fname,
+		        strerror(errno));
+		return -1;
+	}
+	err = do_archive(pkgf, func, arg1, arg2);
+	fclose(pkgf);
 	return err;
 }
 

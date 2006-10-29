@@ -40,8 +40,9 @@ void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
 		    void *arg);
 pkg_desc_t *pkg_find_pkg(const char *name);
 int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg);
-int do_archive(const char *pkg_path, do_archive_fun_t func, void *arg1,
-               void *arg2);
+int do_archive(FILE *pkg, do_archive_fun_t func, void *arg1, void *arg2);
+int do_archive_once(const char *fname, do_archive_fun_t func, void *arg1,
+                    void *arg2);
 int fetch_line_fields(char *line);
 
 #ifdef DEBUG

@@ -19,7 +19,6 @@
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
 //  USA.
 //
-
 #define _GNU_SOURCE
 #include <stdio.h>
 #include <string.h>
@@ -32,6 +31,7 @@
 #include <regex.h>
 #include <sys/param.h>
 #include <sys/file.h>
+#include <assert.h>
 
 #include <pkgutils/pkgutils.h>
 
@@ -48,6 +48,86 @@ typedef struct {
 	regex_t regex;
 	uint8_t yes;
 } rule_t;
+
+static
+void cleanup_config() {
+	list_for_each(_rule, &config_rules) {
+		rule_t *rule = _rule->data;
+		regfree(&rule->regex);
+		free(rule);
+	}
+	list_free(&config_rules);
+	return;
+}
+
+static
+void read_config() {
+	char *config;
+	FILE *f;
+	char *line = NULL;
+	size_t line_size;
+	char *pline;
+	size_t lineno = 0;
+	int tmp;
+	rule_t tmprule;
+	
+	list_init(&config_rules);
+	config = fmalloc(strlen(opt_root) + sizeof(PKG_ADD_CONFIG));
+	strcpy(config, opt_root);
+	strcat(config, PKG_ADD_CONFIG);
+	f = fopen(config, "r");
+	if (!f) die(config);
+
+	while (1) {
+		line = NULL;
+		if (getline(&line, &line_size, f) == -1) break;
+		lineno++;
+
+		tmp = fetch_line_fields(line);
+		if (tmp < 0) {
+			fprintf(stderr, "%s: parse error at line %d\n", config,
+			                                               lineno);
+			abort();
+		}
+
+		if (tmp == 3 && !strcmp(line, "UPGRADE")) {
+			tmprule.type = UPGRADE;
+		}
+		else if (tmp == 3 && !strcmp(line, "INSTALL")) {
+			tmprule.type = INSTALL;
+		}
+		else if (tmp == 0) {
+			free(line);
+			continue;
+		}
+		else {
+			fprintf(stderr, "%s: unknown rule: %s\n", config,
+			                                          line);
+			abort();
+		}
+
+		pline = line + strlen(line) + 1;
+		if (regcomp(&tmprule.regex, pline, REG_EXTENDED | REG_NOSUB)) {
+			fprintf(stderr, "%s: %s: can't compile regex\n",
+			        config, pline);
+			abort();
+		}
+
+		pline = pline + strlen(pline) + 1;
+		if (pline[0] == 'Y') tmprule.yes = 1;
+		else tmprule.yes = 0;
+
+		rule_t *rule = fmalloc(sizeof(rule_t));
+		*rule = tmprule;
+		list_append(&config_rules, rule);
+
+		free(line);
+	}
+
+	free(config);
+	fclose(f);
+	return;
+}
 
 static
 int report_conflicts(pkg_desc_t *pkg) {
@@ -97,25 +177,20 @@ int report_conflicts(pkg_desc_t *pkg) {
 static
 int adjust_with_fs(pkg_desc_t *pkg) {
 	struct stat st;
-	size_t root_size = strlen(opt_root);
-	char tmp[MAXPATHLEN];
-	
-	strcpy(tmp, opt_root);
 
 	list_for_each(_pkg_file, &pkg->files) {
 		pkg_file_t *pkg_file = _pkg_file->data;
-		tmp[root_size] = '\0';
-		strcat(tmp, pkg_file->path);
-
-		if (lstat(tmp, &st) != 0) continue;
+		if (lstat(pkg_file->path, &st) != 0) continue;
 		
 		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
-			if (stat(tmp, &st) != 0) {
-				fprintf(stderr, "can't stat %s", tmp);
+			if (stat(pkg_file->path, &st) != 0) {
+				fprintf(stderr, "can't stat %s%s", opt_root,
+				        pkg_file->path);
 				die("");
 			}
 			if (S_ISDIR(st.st_mode)) {
-				dbg("%s stored as symlink\n", tmp);
+				dbg("%s%s stored as symlink\n", opt_root,
+				    pkg_file->path);
 				pkg_file->mode &= ~S_IFDIR;
 				pkg_file->mode |= S_IFLNK;
 			}
@@ -279,32 +354,24 @@ int should_install(const char *path) {
 static
 void extract_files(struct archive *ar, struct archive_entry *en,
                    void *__file, void *unused) {
-	// keep track of already listed files. assuming that archive
-	// not changed since list_files.
 	list_entry_t **_file = *(list_entry_t***)__file;
 	pkg_file_t *file = (*_file)->data;
 	*_file = (*_file)->next; // XXX: valgrind thinks that that line leaks
 	                         //      memory :-)
-	const char *cpath;
 	char path[MAXPATHLEN];
+	const char *cpath;
 	cpath = archive_entry_pathname(en);
-	
+
 	if (!should_install(cpath)) return;
 
 	if (file->conflict == CONFLICT_SELF && should_reject(cpath)) {
-		strcpy(path, opt_root);
-		strcat(path, PKG_REJECT_DIR);
+		strcpy(path, PKG_REJECT_DIR);
 		strcat(path, cpath);
+		archive_entry_set_pathname(en, path);
 		fprintf(stderr, "rejecting %s\n", cpath);
-		dbg("to %s\n", path);
+		dbg("to %s%s\n", opt_root, path);
 	}
-	else {
-		strcpy(path, opt_root);
-		strcat(path, cpath);
-		dbg("installing %s\n", path);
-	}
-
-	archive_entry_set_pathname(en, path);
+	else dbg("installing %s%s\n", opt_root, cpath);
 
 	int err;
 	if ((err = archive_read_extract(ar, en, 0)) < 0) {
@@ -313,7 +380,8 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 		// XXX: investigate why libarchive sets EEXIST where EPERM
 		//      expected
 		if (err != EEXIST) strerr = archive_error_string(ar);
-		fprintf(stderr, "Failed to extract %s: %s\n", path, strerr);
+		fprintf(stderr, "Failed to extract %s%s: %s\n", opt_root,
+		        archive_entry_pathname(en), strerr);
 	}
 	return;
 }
@@ -345,98 +413,14 @@ void list_files(struct archive *ar, struct archive_entry *en, void *_pkg,
 	return;
 }
 
-static
-void cleanup_config() {
-	list_for_each(_rule, &config_rules) {
-		rule_t *rule = _rule->data;
-		regfree(&rule->regex);
-		free(rule);
-	}
-	list_free(&config_rules);
-	return;
-}
-
-static
-void read_config() {
-	char *config;
-	FILE *f;
-	char *line = NULL;
-	size_t line_size;
-	char *pline;
-	size_t lineno = 0;
-	int tmp;
-	rule_t tmprule;
-	
-	list_init(&config_rules);
-	config = fmalloc(strlen(opt_root) + sizeof(PKG_ADD_CONFIG));
-	strcpy(config, opt_root);
-	strcat(config, PKG_ADD_CONFIG);
-	f = fopen(config, "r");
-	if (!f) die(config);
-
-	while (1) {
-		line = NULL;
-		if (getline(&line, &line_size, f) == -1) break;
-		lineno++;
-
-		tmp = fetch_line_fields(line);
-		if (tmp < 0) {
-			fprintf(stderr, "%s: parse error at line %d\n", config,
-			                                               lineno);
-			abort();
-		}
-
-		if (tmp == 3 && !strcmp(line, "UPGRADE")) {
-			tmprule.type = UPGRADE;
-		}
-		else if (tmp == 3 && !strcmp(line, "INSTALL")) {
-			tmprule.type = INSTALL;
-		}
-		else if (tmp == 0) {
-			free(line);
-			continue;
-		}
-		else {
-			fprintf(stderr, "%s: unknown rule: %s\n", config,
-			                                          line);
-			abort();
-		}
-
-		pline = line + strlen(line) + 1;
-		if (regcomp(&tmprule.regex, pline, REG_EXTENDED | REG_NOSUB)) {
-			fprintf(stderr, "%s: %s: can't compile regex\n",
-			        config, pline);
-			abort();
-		}
-
-		pline = pline + strlen(pline) + 1;
-		if (pline[0] == 'Y') tmprule.yes = 1;
-		else tmprule.yes = 0;
-
-		rule_t *rule = fmalloc(sizeof(rule_t));
-		*rule = tmprule;
-		list_append(&config_rules, rule);
-
-		free(line);
-	}
-
-	free(config);
-	fclose(f);
-	return;
-}
 
 static
 void del_old_pkg(pkg_desc_t *old_pkg) {
-	char tmp[MAXPATHLEN];
-	size_t root_len = strlen(opt_root);
-	strcpy(tmp, opt_root);
-
 	list_for_each_r(_file, &old_pkg->files) {
 		pkg_file_t *file = _file->data;
-		tmp[root_len] = '\0';
-		strcat(tmp, file->path);
-		if (remove(tmp)) {
-			fprintf(stderr, "can't remove %s", tmp);
+		if (remove(file->path)) {
+			fprintf(stderr, "can't remove %s%s", opt_root,
+			        file->path);
 			die("");
 		}
 		_file = _file->next;
@@ -460,11 +444,29 @@ void del_old_pkg(pkg_desc_t *old_pkg) {
 
 // Returns found conflicts, -1 on other errors, 0 on success
 int pkg_add(const char *pkg_path, int opts) {
-	pkg_desc_t *pkg;
+	FILE *pkgf = NULL, *curdir = NULL;
+	pkg_desc_t *pkg = NULL;
 	pkg_desc_t *old_pkg;
 	int found_conflicts = -1;
 	read_config();
 	
+	pkgf = fopen(pkg_path, "r");
+	if (!pkgf) {
+		fprintf(stderr, "Can't open package %s: %s\n", pkg_path,
+		        strerror(errno));
+		goto cleanup;
+	}
+	curdir = fopen(".", "r");
+	if (!curdir) {
+		fprintf(stderr, "Can't obtain current directory: %s\n",
+		        strerror(errno));
+		goto cleanup;
+	}
+	if (chdir(opt_root)) {
+		fprintf(stderr, "Can't chdir to root: %s", strerror(errno));
+		goto cleanup;
+	}
+
 	pkg = fmalloc(sizeof(pkg_desc_t));
 	list_init(&pkg->files);
 	if (pkg_make_desc(pkg_path, pkg)) {
@@ -474,7 +476,7 @@ int pkg_add(const char *pkg_path, int opts) {
 		pkg->version = NULL;
 		goto cleanup;
 	}
-	if (do_archive(pkg_path, list_files, pkg, NULL)) abort();
+	if (do_archive(pkgf, list_files, pkg, NULL)) abort();
 
 	old_pkg = pkg_find_pkg(pkg->name);
 	adjust_with_db(pkg, old_pkg);
@@ -491,7 +493,8 @@ int pkg_add(const char *pkg_path, int opts) {
 	pkg_commit_db();
 
 	list_entry_t *tmp = pkg->files.head;
-	do_archive(pkg_path, extract_files, &tmp, NULL);
+
+	do_archive(pkgf, extract_files, &tmp, NULL);
 	
 	pkg = NULL;
 cleanup:
@@ -507,6 +510,14 @@ cleanup:
 		free(pkg->name);
 		free(pkg->version);
 		free(pkg);
+	}
+	if (pkgf) fclose(pkgf);
+	if (curdir) {
+		if (fchdir(fileno(curdir)) < 0) {
+			fprintf(stderr, "Can't back to curdir: %s\n",
+			        strerror(errno));
+		}
+		fclose(curdir);
 	}
 	cleanup_config();
 	return found_conflicts;

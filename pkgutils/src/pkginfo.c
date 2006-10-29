@@ -113,7 +113,7 @@ void print_footprint(struct archive *ar, struct archive_entry *en,
 static
 int footprint() {
 	if (!strchr(opt_footprint, '#')) return 1;
-	return do_archive(opt_footprint, print_footprint, NULL, NULL);
+	return do_archive_once(opt_footprint, print_footprint, NULL, NULL);
 }
 
 struct pkg_file_pair {
@@ -176,7 +176,7 @@ int list() {
 	pkg_desc_t *pkg;
 
 	if (strchr(opt_list, '#')) {
-		ret = do_archive(opt_list, list_ar_files, NULL, NULL);
+		ret = do_archive_once(opt_list, list_ar_files, NULL, NULL);
 		return ret;
 	}
 
