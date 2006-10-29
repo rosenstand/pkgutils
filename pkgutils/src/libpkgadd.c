@@ -439,8 +439,8 @@ void del_old_pkg(pkg_desc_t *old_pkg) {
 			fprintf(stderr, "can't remove %s", tmp);
 			die("");
 		}
-		_file = _file->prev;
-		list_delete(&old_pkg->files, _file->next);
+		_file = _file->next;
+		list_delete(&old_pkg->files, _file->prev);
 		free(file->path);
 		free(file);
 	}

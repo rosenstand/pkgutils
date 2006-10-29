@@ -91,15 +91,16 @@ void remove_from_fs(pkg_desc_t *pkg2rm) {
 	size_t root_len = strlen(opt_root);
 	strcpy(tmp, opt_root);
 
-	list_for_each(_file2rm, &pkg2rm->files) {
+	list_for_each_r(_file2rm, &pkg2rm->files) {
 		pkg_file_t *file2rm = _file2rm->data;
 		tmp[root_len] = '\0';
 		strcat(tmp, file2rm->path);
+		dbg("removing %s\n", tmp);
 		if (remove(tmp))
 			fprintf(stderr, "can't remove %s: %s\n", tmp,
 			        strerror(errno));
-		_file2rm = _file2rm->prev;
-		list_delete(&pkg2rm->files, _file2rm->next);
+		_file2rm = _file2rm->next;
+		list_delete(&pkg2rm->files, _file2rm->prev);
 		free(file2rm->path);
 		free(file2rm);
 	}
