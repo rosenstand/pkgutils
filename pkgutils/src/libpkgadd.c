@@ -111,7 +111,7 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 		
 		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
 			if (stat(tmp, &st) != 0) {
-				printf("can't stat %s", tmp);
+				fprintf(stderr, "can't stat %s", tmp);
 				die("");
 			}
 			if (S_ISDIR(st.st_mode)) {
@@ -176,7 +176,7 @@ void self_conflict(void **ai, void **bj, void *arg) {
 	free(old_pkgfile);
 	list_delete(&old_pkg->files, *(list_entry_t**)bj);
 
-	printf("s %s\n", new_pkgfile->path);
+	dbg("s %s\n", new_pkgfile->path);
 	return;
 }
 
@@ -188,7 +188,7 @@ void db_conflict(void **ai, void **bj, void *arg) {
 	// dir, but db file is) made while finding fs conflicts, not here.
 	if (!S_ISDIR(new_pkgfile->mode)) {
 		new_pkgfile->conflict = CONFLICT_DB;
-		printf("d %s\n", new_pkgfile->path);
+		dbg("d %s\n", new_pkgfile->path);
 	}
 	return;
 }

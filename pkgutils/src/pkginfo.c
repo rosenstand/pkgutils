@@ -190,8 +190,8 @@ int list() {
 		}
 	}
 	pkg_free_db();
-	if (ret) fprintf(stderr, "\"%s\" is neither an installed package nor "
-	                 "a package file.\n", opt_list);
+	if (ret) fprintf(stderr, "\"%s\" is neither the installed package nor "
+	                 "the package file.\n", opt_list);
 	return ret;
 }
 
