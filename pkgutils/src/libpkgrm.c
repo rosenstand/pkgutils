@@ -31,7 +31,8 @@ static
 void delete_ref(void **ai, void **bj, void *arg) {
 	pkg_desc_t *pkg2rm = arg;
 	pkg_file_t *pkgfile = (*(list_entry_t**)ai)->data;
-	
+
+	dbg("ref %s\n", pkgfile->path);
 	free(pkgfile->path);
 	free(pkgfile);
 	list_delete(&pkg2rm->files, *(list_entry_t**)ai);
@@ -52,7 +53,6 @@ void delete_refs(pkg_desc_t *pkg2rm) {
 		if (dbpkg == pkg2rm) continue;
 		dbsize += dbpkg->files.size;
 	}
-	printf("size: %d\n", dbsize);
 
 	dbfiles = fmalloc(dbsize * sizeof(void*));
 	cnt = 0;
@@ -91,7 +91,7 @@ void remove_from_fs(pkg_desc_t *pkg2rm) {
 	size_t root_len = strlen(opt_root);
 	strcpy(tmp, opt_root);
 
-	list_for_each_r(_file2rm, &pkg2rm->files) {
+	list_for_each(_file2rm, &pkg2rm->files) {
 		pkg_file_t *file2rm = _file2rm->data;
 		tmp[root_len] = '\0';
 		strcat(tmp, file2rm->path);

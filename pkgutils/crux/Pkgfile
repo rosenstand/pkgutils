@@ -18,8 +18,8 @@ build() {
 	)
 
 	cd $name-$version
-	make LIBARCHIVE_CFLAGS="-I$PKG/usr/include"   \
-	     LIBARCHIVE_LDFLAGS="-L$PKG/usr/lib/ -lz"
+	make LIBARCHIVE_CFLAGS="-I$PKG/usr/include"             \
+	     LIBARCHIVE_LDFLAGS="-L$PKG/usr/lib/ -larchive -lz"
 	rm -rf $PKG/usr
 	make install DESTDIR=$PKG PREFIX=/usr
 
