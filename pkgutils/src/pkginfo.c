@@ -91,22 +91,37 @@ void parse_opts(int argc, char *argv[]) {
 static
 void print_footprint(struct archive *ar, struct archive_entry *en,
                      void *unused1, void *unused2) {
-	static char mode[11];
+	const struct stat *st;
+	static char smode[11];
 	struct passwd *pw;
 	struct group *gr;
-
-	mode_string(archive_entry_mode(en), mode);
-	printf("%s\t", mode);
 	
-	pw = getpwuid(archive_entry_uid(en));
+	st = archive_entry_stat(en);
+	mode_string(st->st_mode, smode);
+	printf("%s\t", smode);
+	
+	pw = getpwuid(st->st_uid);
 	if (pw) printf("%s/", pw->pw_name);
-	else printf("%d/", archive_entry_uid(en));
+	else printf("%d/", st->st_uid);
 
-	gr = getgrgid(archive_entry_gid(en));
+	gr = getgrgid(st->st_gid);
 	if (gr) printf("%s\t", gr->gr_name);
-	else printf("%d\t", archive_entry_gid(en));
+	else printf("%d\t", st->st_gid);
 
-	puts(archive_entry_pathname(en));
+	printf("%s", archive_entry_pathname(en));
+
+	if (S_ISLNK(st->st_mode)) {
+		printf(" -> %s", archive_entry_symlink(en));
+	}
+	else if (S_ISBLK(st->st_mode) || S_ISCHR(st->st_mode)) {
+		printf(" (%d, %d)", (int)archive_entry_rdevmajor(en),
+		                    (int)archive_entry_rdevminor(en));
+	}
+	else if (S_ISREG(st->st_mode) && !st->st_size) {
+		printf(" (EMPTY)");
+	}
+
+	puts("");
 	return;
 }
 
