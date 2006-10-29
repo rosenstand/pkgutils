@@ -131,17 +131,12 @@ int footprint() {
 	return do_archive_once(opt_footprint, print_footprint, NULL, NULL);
 }
 
-struct pkg_file_pair {
-	pkg_desc_t *pkg;
-	pkg_file_t *file;
-};
-
 static
 int owner() {
 	int ret = 1;
 	size_t width = 0;
 	regex_t re;
-	list_t pairs;
+	list_t files;
 	
 	if (opt_owner[0] == '/') strcpy(opt_owner, opt_owner+1);
 
@@ -150,30 +145,25 @@ int owner() {
 		return 1;
 	}
 	
-	list_init(&pairs);
+	list_init(&files);
 	pkg_init_db();
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
 		list_for_each(_file, &pkg->files) {
 			pkg_file_t *file = _file->data;
 			if (regexec(&re, file->path, 0, 0, 0)) continue;
-			struct pkg_file_pair *pair = fmalloc(
-			                         sizeof(struct pkg_file_pair));
-			pair->pkg = pkg;
-			pair->file = file;
-			list_append(&pairs, pair);
+			list_append(&files, file);
 			width = MAX(strlen(pkg->name), width);
 		}
 	}
 	
 	printf("%-*s %s\n", width, "Package", "File");
-	list_for_each(_pair, &pairs) {
-		struct pkg_file_pair *pair = _pair->data;
-		printf("%-*s %s\n", width, pair->pkg->name, pair->file->path);
-		free(pair);
+	list_for_each(_file, &files) {
+		pkg_file_t *file = _file->data;
+		printf("%-*s %s\n", width, file->pkg->name, file->path);
 	}
 
-	list_free(&pairs);
+	list_free(&files);
 	pkg_free_db();
 	return ret;
 }
