@@ -23,6 +23,14 @@
 #pragma once
 #include <sys/types.h>
 
+typedef enum {
+	CONFLICT_NONE = 0,  // gag
+	CONFLICT_SELF = 1,  // pseudo conflict when upgrading
+	CONFLICT_DB   = 2,  // file conflict in database
+	CONFLICT_FS   = 4,  // file conflict in filesystem
+	CONFLICT_PERM = 8   // mode/ownership conflict
+} pkg_conflict_type_t;
+
 typedef struct {
 	char *name;
 	char *version;
@@ -31,25 +39,9 @@ typedef struct {
 
 typedef struct {
 	pkg_desc_t *pkg;
-	int conflict;
+	pkg_conflict_type_t conflict;
 	char *path;
 	mode_t mode;
 	uid_t uid;
 	gid_t gid;
 } pkg_file_t;
-
-typedef enum {
-	CONFLICT_NONE = 0,  // gag
-	CONFLICT_LINK = 1,  // pseudo conflict
-	CONFLICT_SELF = 2,  // pseudo conflict when upgrading
-	CONFLICT_REF  = 4,  // pseudo conflict when upgrading
-	CONFLICT_DB   = 8,  // file conflict in database
-	CONFLICT_FS   = 16, // file conflict in filesystem
-	CONFLICT_PERM = 32  // mode/ownership conflict
-} pkg_conflict_type_t;
-
-typedef struct {
-	pkg_desc_t *pkg;
-	pkg_file_t *file;
-	pkg_conflict_type_t type;
-} pkg_conflict_t;

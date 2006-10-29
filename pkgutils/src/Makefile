@@ -1,7 +1,7 @@
 include ../Makefile.h
 
 CC = gcc -std=c99
-CFLAGS += -Wall -I../include -DVERSION=\"$(VERSION)\" -DDEBUG
+CFLAGS += -Wall -I../include -DVERSION=\"$(VERSION)\"
 CFLAGS += $(LIBARCHIVE_CFLAGS)
 LDFLAGS += -L.
 LDFLAGS += $(LIBARCHIVE_LDFLAGS)

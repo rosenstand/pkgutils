@@ -98,6 +98,8 @@ void remove_from_fs(pkg_desc_t *pkg2rm) {
 		if (remove(tmp))
 			fprintf(stderr, "can't remove %s: %s\n", tmp,
 			        strerror(errno));
+		_file2rm = _file2rm->prev;
+		list_delete(&pkg2rm->files, _file2rm->next);
 		free(file2rm->path);
 		free(file2rm);
 	}
