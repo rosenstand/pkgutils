@@ -213,20 +213,6 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 }
 
 static
-int should_reject(const char *path) {
-	int reject = 0;
-	list_for_each(_rule, &config_rules) {
-		rule_t *rule = _rule->data;
-		if (rule->type != UPGRADE) continue;
-		if (!regexec(&rule->regex, path, 0, NULL, 0)) {
-			if (!rule->yes) reject = 1;
-			else reject = 0;
-		}
-	}
-	return reject;
-}
-
-static
 void del_reference(void **ai, void **bj, void *arg) {
         pkg_desc_t *old_pkg = arg;
 	pkg_file_t *old_pkgfile = (*(list_entry_t**)ai)->data;
@@ -338,17 +324,17 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 }
 
 static
-int should_install(const char *path) {
-	int install = 1;
+int adjust_with_config(const char *path, rule_type_t type) {
+	int ret = 1;
 	list_for_each(_rule, &config_rules) {
 		rule_t *rule = _rule->data;
-		if (rule->type != INSTALL) continue;
+		if (rule->type != type) continue;
 		if (!regexec(&rule->regex, path, 0, NULL, 0)) {
-			if (rule->yes) install = 1;
-			else install = 0;
+			if (rule->yes) ret = 1;
+			else ret = 0;
 		}
 	}
-	return install;
+	return ret;
 }
 
 static
@@ -362,9 +348,10 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 	const char *cpath;
 	cpath = archive_entry_pathname(en);
 
-	if (!should_install(cpath)) return;
+	if (!adjust_with_config(cpath, INSTALL)) return;
 
-	if (file->conflict == CONFLICT_SELF && should_reject(cpath)) {
+	if (file->conflict == CONFLICT_SELF &&
+	                   !adjust_with_config(cpath, UPGRADE)) {
 		strcpy(path, PKG_REJECT_DIR);
 		strcat(path, cpath);
 		archive_entry_set_pathname(en, path);
@@ -413,7 +400,6 @@ void list_files(struct archive *ar, struct archive_entry *en, void *_pkg,
 	return;
 }
 
-
 static
 void del_old_pkg(pkg_desc_t *old_pkg) {
 	list_for_each_r(_file, &old_pkg->files) {
@@ -457,15 +443,8 @@ int pkg_add(const char *pkg_path, int opts) {
 		goto cleanup;
 	}
 	curdir = fopen(".", "r");
-	if (!curdir) {
-		fprintf(stderr, "Can't obtain current directory: %s\n",
-		        strerror(errno));
-		goto cleanup;
-	}
-	if (chdir(opt_root)) {
-		fprintf(stderr, "Can't chdir to root: %s", strerror(errno));
-		goto cleanup;
-	}
+	if (!curdir) die("Can't obtain current directory");
+	if (chdir(opt_root)) die("Can't chdir to root");
 
 	pkg = fmalloc(sizeof(pkg_desc_t));
 	list_init(&pkg->files);
@@ -493,7 +472,6 @@ int pkg_add(const char *pkg_path, int opts) {
 	pkg_commit_db();
 
 	list_entry_t *tmp = pkg->files.head;
-
 	do_archive(pkgf, extract_files, &tmp, NULL);
 	
 	pkg = NULL;
