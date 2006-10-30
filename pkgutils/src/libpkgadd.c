@@ -361,7 +361,8 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 	else dbg("installing %s%s\n", opt_root, cpath);
 
 	int err;
-	if ((err = archive_read_extract(ar, en, 0)) < 0) {
+	if ((err = archive_read_extract(ar, en, ARCHIVE_EXTRACT_OWNER |
+	                                        ARCHIVE_EXTRACT_PERM)) < 0) {
 		const char *strerr = "Operation not permitted";
 		err = archive_errno(ar);
 		// XXX: investigate why libarchive sets EEXIST where EPERM
