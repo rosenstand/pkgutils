@@ -34,6 +34,7 @@
 #include <assert.h>
 
 #include <pkgutils/pkgutils.h>
+#include <pkgutils/filemode.h>
 
 static
 list_t config_rules;
@@ -164,11 +165,27 @@ int report_conflicts(pkg_desc_t *pkg) {
 	}
 	if (types & CONFLICT_PERM) {
 		puts("Following files conflicting by mode or ownership:");
+		struct stat st;
+		char smode[11];
+
 		list_for_each(_file, &pkg->files) {
 			file = _file->data;
-			if (file->conflict == CONFLICT_PERM) puts(file->path);
+			if (file->conflict != CONFLICT_PERM) continue;
+
+			printf("%s %d/%d %s\n",
+			       mode_string(file->mode, smode), file->uid,
+			       file->gid, file->path);
+			if (lstat(file->path, &st) < 0) {
+				fprintf(stderr, "can't stat %s%s: %s\n",
+				        opt_root, file->path, strerror(errno));
+				puts("");
+				continue;
+			}
+			printf("%s %d/%d %s%s\n",
+			       mode_string(st.st_mode, smode), st.st_uid,
+			       st.st_gid, opt_root, file->path);
+			puts("");
 		}
-		puts("");
 	}
 	
 	return types;
