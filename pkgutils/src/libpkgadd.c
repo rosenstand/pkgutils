@@ -231,12 +231,11 @@ static
 void del_reference(void **ai, void **bj, void *arg) {
         pkg_desc_t *old_pkg = arg;
 	pkg_file_t *old_pkgfile = (*(list_entry_t**)ai)->data;
-
+	
+	dbg("ref deleted %s\n", old_pkgfile->path);
 	free(old_pkgfile->path);
 	free(old_pkgfile);
 	list_delete(&old_pkg->files, *(list_entry_t**)ai);
-
-	dbg("ref deleted %s\n", old_pkgfile->path);
 	return;
 }
 
@@ -316,7 +315,7 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 			cnt++;
 		}
 		qsort(oldfiles, old_pkg->files.size, sizeof(void *), pkg_cmp);
-
+		
 		// intersections between newfiles and oldfiles are self
 		// conflicts to newfiles. intersected oldfiles are references
 		// which should be removed, as they'll overwritten by newfiles
@@ -324,12 +323,20 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 		               oldfiles, old_pkg->files.size,
 		               pkg_cmp, self_conflict, NULL, old_pkg);
 		
+		// should refresh oldfiles array
+		cnt = 0;
+		list_for_each(_file, &old_pkg->files) {
+			oldfiles[cnt] = _file;
+			cnt++;
+		}
+		qsort(oldfiles, old_pkg->files.size, sizeof(void *), pkg_cmp);
+		
 		// intersections between oldfiles and dbfiles are references
 		// which must be removed from oldfiles
 		intersect_uniq(oldfiles, old_pkg->files.size,
 		               dbfiles, dbsize,
 		               pkg_cmp, del_reference, NULL, old_pkg);
-
+		
 		free(oldfiles);
 	}
 	
