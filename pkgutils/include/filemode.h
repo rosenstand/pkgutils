@@ -25,4 +25,4 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void mode_string (mode_t mode, char *str);
+char *mode_string(mode_t mode, char *str);

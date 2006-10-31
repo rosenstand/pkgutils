@@ -60,9 +60,9 @@ char ftypelet (mode_t bits) {
 }
 
 // mode_string - fill in string STR with an ls-style ASCII
-// representation of the mode_t. 10 characters are stored in STR;
-// no terminating null is added.
-void mode_string (mode_t mode, char *str) {
+// representation of the mode_t. 11 characters are stored in STR;
+// terminating null is added.
+char *mode_string (mode_t mode, char *str) {
 	str[0] = ftypelet (mode);
 	str[1] = mode & S_IRUSR ? 'r' : '-';
 	str[2] = mode & S_IWUSR ? 'w' : '-';
@@ -74,4 +74,6 @@ void mode_string (mode_t mode, char *str) {
 	str[8] = mode & S_IWOTH ? 'w' : '-';
 	str[9] = mode & S_IXOTH ? 'x' : '-';
 	setst (mode, str);
+	str[10] = '\0';
+	return str;
 }

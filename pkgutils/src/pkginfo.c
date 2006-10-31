@@ -96,8 +96,7 @@ void print_footprint(struct archive *ar, struct archive_entry *en,
 	struct group *gr;
 	
 	st = archive_entry_stat(en);
-	mode_string(st->st_mode, smode);
-	printf("%s\t", smode);
+	printf("%s\t", mode_string(st->st_mode, smode));
 	
 	pw = getpwuid(st->st_uid);
 	if (pw) printf("%s/", pw->pw_name);
