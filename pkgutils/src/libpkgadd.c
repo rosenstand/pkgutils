@@ -430,7 +430,6 @@ void del_old_pkg(pkg_desc_t *old_pkg) {
 		if (remove(file->path)) {
 			fprintf(stderr, "can't remove %s%s", opt_root,
 			        file->path);
-			die("");
 		}
 		_file = _file->next;
 		list_delete(&old_pkg->files, _file->prev);
