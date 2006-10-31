@@ -30,7 +30,6 @@
 #include <grp.h>
 #include <regex.h>
 #include <pkgutils/pkgutils.h>
-#include <pkgutils/filemode.h>
 #include "entry.h"
 
 static

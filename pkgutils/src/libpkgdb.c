@@ -27,7 +27,6 @@
 #include <unistd.h>
 #include <sys/file.h>
 #include <sys/param.h>
-
 #include <pkgutils/pkgutils.h>
 
 void pkg_lock_db() {

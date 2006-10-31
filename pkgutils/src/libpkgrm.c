@@ -23,7 +23,6 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/param.h>
-
 #include <pkgutils/pkgutils.h>
 
 static

@@ -25,6 +25,7 @@
 #include <pkgutils/list.h>
 #include <pkgutils/types.h>
 #include <pkgutils/misc.h>
+#include <pkgutils/filemode.h>
 
 #define PKG_EXT         ".pkg.tar.gz"
 #define PKG_DB_DIR      "var/lib/pkg/"

@@ -32,9 +32,7 @@
 #include <sys/param.h>
 #include <sys/file.h>
 #include <assert.h>
-
 #include <pkgutils/pkgutils.h>
-#include <pkgutils/filemode.h>
 
 static
 list_t config_rules;
