@@ -195,7 +195,11 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 
 	list_for_each(_pkg_file, &pkg->files) {
 		pkg_file_t *pkg_file = _pkg_file->data;
-		if (lstat(pkg_file->path, &st) != 0) continue;
+		if (lstat(pkg_file->path, &st) != 0) {
+			if (pkg_file->conflict == CONFLICT_SELF)
+				pkg_file->conflict = CONFLICT_NONE;
+			continue;
+		}
 		
 		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
 			if (stat(pkg_file->path, &st) != 0) {
