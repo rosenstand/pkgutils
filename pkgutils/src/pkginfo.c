@@ -102,7 +102,11 @@ void print_footprint(struct archive *ar, struct archive_entry *en,
 	st.st_size = archive_entry_size(en);
 	// XXX: another workaround for the libarchive possible bug: it do
 	//      not set any type to the hardlinks, but should.
-	if (archive_entry_hardlink(en)) st.st_mode = st.st_mode |= S_IFREG;
+	if (archive_entry_hardlink(en)) {
+		st.st_mode = st.st_mode |= S_IFREG;
+		// libarchive do not set size for the hardlinks
+		st.st_size = 1;
+	}
 
 	printf("%s\t", mode_string(st.st_mode, smode));
 
