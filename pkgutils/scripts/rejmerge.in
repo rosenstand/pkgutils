@@ -302,7 +302,7 @@ trap "atexit" EXIT
 
 export LC_ALL=POSIX
 
-readonly REJMERGE_VERSION="#VERSION#"
+readonly REJMERGE_VERSION="@VERSION@"
 readonly REJMERGE_COMMAND="${0##*/}"
 REJMERGE_ROOT=""
 REJMERGE_CONF="/etc/rejmerge.conf"

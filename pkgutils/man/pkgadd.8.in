@@ -1,4 +1,4 @@
-.TH pkgadd 8 "" "pkgutils-c #VERSION#" ""
+.TH pkgadd 8 "" "pkgutils-c @VERSION@" ""
 .SH NAME
 pkgadd \- install software package
 .SH SYNOPSIS
