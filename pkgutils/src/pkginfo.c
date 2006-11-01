@@ -19,6 +19,7 @@
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, 
 //  USA.
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -89,32 +90,42 @@ void parse_opts(int argc, char *argv[]) {
 static
 void print_footprint(struct archive *ar, struct archive_entry *en,
                      void *unused1, void *unused2) {
-	const struct stat *st;
+	struct stat st;
 	static char smode[11];
 	struct passwd *pw;
 	struct group *gr;
 	
-	st = archive_entry_stat(en);
-	printf("%s\t", mode_string(st->st_mode, smode));
-	
-	pw = getpwuid(st->st_uid);
-	if (pw) printf("%s/", pw->pw_name);
-	else printf("%d/", st->st_uid);
+	// XXX: archive_entry_copy_stat() seems buggy, fill stat manually
+	st.st_mode = archive_entry_mode(en);
+	st.st_uid = archive_entry_uid(en);
+	st.st_gid = archive_entry_gid(en);
+	st.st_size = archive_entry_size(en);
+	// XXX: another workaround for the libarchive possible bug: it do
+	//      not set any type to the hardlinks, but should.
+	if (archive_entry_hardlink(en)) {
+		st.st_mode = st.st_mode |= S_IFREG;
+	}
 
-	gr = getgrgid(st->st_gid);
+	printf("%s\t", mode_string(st.st_mode, smode));
+
+	pw = getpwuid(st.st_uid);
+	if (pw) printf("%s/", pw->pw_name);
+	else printf("%d/", st.st_uid);
+
+	gr = getgrgid(st.st_gid);
 	if (gr) printf("%s\t", gr->gr_name);
-	else printf("%d\t", st->st_gid);
+	else printf("%d\t", st.st_gid);
 
 	printf("%s", archive_entry_pathname(en));
 
-	if (S_ISLNK(st->st_mode)) {
+	if (S_ISLNK(st.st_mode)) {
 		printf(" -> %s", archive_entry_symlink(en));
 	}
-	else if (S_ISBLK(st->st_mode) || S_ISCHR(st->st_mode)) {
+	else if (S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode)) {
 		printf(" (%d, %d)", (int)archive_entry_rdevmajor(en),
 		                    (int)archive_entry_rdevminor(en));
 	}
-	else if (S_ISREG(st->st_mode) && !st->st_size) {
+	else if (S_ISREG(st.st_mode) && !st.st_size) {
 		printf(" (EMPTY)");
 	}
 
