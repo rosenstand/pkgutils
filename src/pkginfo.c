@@ -212,12 +212,25 @@ int list() {
 
 static
 int installed() {
+	void **pkgs;
+	int cnt = 0;
+
 	pkg_init_db();
+	pkgs = fmalloc(pkg_db.size * sizeof(void*));
+	
 	list_for_each(_pkg, &pkg_db) {
-		pkg_desc_t *pkg = _pkg->data;
+		pkgs[cnt] = _pkg;
+		cnt++;
+	}
+	qsort(pkgs, pkg_db.size, sizeof(void*), pkg_cmp);
+
+	for (cnt = 0; cnt < pkg_db.size; cnt++) {
+		pkg_desc_t *pkg = ((list_entry_t **)pkgs)[cnt]->data;
 		printf("%s %s\n", pkg->name, pkg->version);
 	}
+
 	pkg_free_db();
+	free(pkgs);
 	return 0;
 }
 

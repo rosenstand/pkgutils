@@ -64,6 +64,12 @@ const char *base_filename(const char *name) {
 	return name;
 }
 
+int pkg_cmp(const void *a, const void *b) {
+	pkg_desc_t *pkga = (*(const list_entry_t **)a)->data;
+	pkg_desc_t *pkgb = (*(const list_entry_t **)b)->data;
+	return strcmp(pkga->name, pkgb->name);
+}
+
 int file_cmp(const void *a, const void *b) {
 	pkg_file_t *filea = (*(const list_entry_t **)a)->data;
 	pkg_file_t *fileb = (*(const list_entry_t **)b)->data;
