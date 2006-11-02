@@ -62,7 +62,7 @@ void delete_refs(pkg_desc_t *pkg2rm) {
 			cnt++;
 		}
 	}
-	qsort(dbfiles, dbsize, sizeof(void*), pkg_cmp);
+	qsort(dbfiles, dbsize, sizeof(void*), file_cmp);
 
 	// creating pkg files sorted array
 	pkgfiles = fmalloc(pkg2rm->files.size * sizeof(void*));
@@ -71,11 +71,11 @@ void delete_refs(pkg_desc_t *pkg2rm) {
 		pkgfiles[cnt] = _file;
 		cnt++;
 	}
-	qsort(pkgfiles, pkg2rm->files.size, sizeof(void*), pkg_cmp);
+	qsort(pkgfiles, pkg2rm->files.size, sizeof(void*), file_cmp);
 	
 	// find intersections in pkg files and db files
 	intersect_uniq(pkgfiles, pkg2rm->files.size, dbfiles, dbsize,
-	               pkg_cmp, delete_ref, NULL, pkg2rm);
+	               file_cmp, delete_ref, NULL, pkg2rm);
 	
 	free(pkgfiles);
 	free(dbfiles);

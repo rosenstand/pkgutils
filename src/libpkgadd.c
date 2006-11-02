@@ -287,7 +287,7 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 			cnt++;
 		}
 	}
-	qsort(dbfiles, dbsize, sizeof(void *), pkg_cmp);
+	qsort(dbfiles, dbsize, sizeof(void *), file_cmp);
 
 	// creating newfiles sorted array
 	newfiles = fmalloc(new_pkg->files.size * sizeof(void *));
@@ -296,11 +296,11 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 		newfiles[cnt] = _file;
 		cnt++;
 	}
-	qsort(newfiles, new_pkg->files.size, sizeof(void *), pkg_cmp);
+	qsort(newfiles, new_pkg->files.size, sizeof(void *), file_cmp);
 
 	// intersections between dbfiles and newfiles are db conflicts
 	intersect_uniq(newfiles, new_pkg->files.size, dbfiles, dbsize,
-	               pkg_cmp, db_conflict, NULL, NULL);
+	               file_cmp, db_conflict, NULL, NULL);
 	
 	if (old_pkg) {
 		// creating oldfiles sorted array
@@ -310,14 +310,14 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 			oldfiles[cnt] = _file;
 			cnt++;
 		}
-		qsort(oldfiles, old_pkg->files.size, sizeof(void *), pkg_cmp);
+		qsort(oldfiles, old_pkg->files.size, sizeof(void *), file_cmp);
 		
 		// intersections between newfiles and oldfiles are self
 		// conflicts to newfiles. intersected oldfiles are references
 		// which should be removed, as they'll overwritten by newfiles
 		intersect_uniq(newfiles, new_pkg->files.size,
 		               oldfiles, old_pkg->files.size,
-		               pkg_cmp, self_conflict, NULL, old_pkg);
+		               file_cmp, self_conflict, NULL, old_pkg);
 		
 		// should refresh oldfiles array
 		cnt = 0;
@@ -325,13 +325,13 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 			oldfiles[cnt] = _file;
 			cnt++;
 		}
-		qsort(oldfiles, old_pkg->files.size, sizeof(void *), pkg_cmp);
+		qsort(oldfiles, old_pkg->files.size, sizeof(void *), file_cmp);
 		
 		// intersections between oldfiles and dbfiles are references
 		// which must be removed from oldfiles
 		intersect_uniq(oldfiles, old_pkg->files.size,
 		               dbfiles, dbsize,
-		               pkg_cmp, del_reference, NULL, old_pkg);
+		               file_cmp, del_reference, NULL, old_pkg);
 		
 		free(oldfiles);
 	}
