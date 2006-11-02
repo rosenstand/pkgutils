@@ -87,16 +87,12 @@ void read_config() {
 			abort();
 		}
 
-		if (tmp == 3 && !strcmp(line, "UPGRADE")) {
+		if (tmp == 3 && !strcmp(line, "UPGRADE"))
 			tmprule.type = UPGRADE;
-		}
-		else if (tmp == 3 && !strcmp(line, "INSTALL")) {
+		else if (tmp == 3 && !strcmp(line, "INSTALL"))
 			tmprule.type = INSTALL;
-		}
-		else if (tmp == 0) {
-			free(line);
+		else if (tmp == 0)
 			continue;
-		}
 		else {
 			fprintf(stderr, "%s: unknown rule: %s\n", config,
 			                                          line);
