@@ -85,7 +85,7 @@ void delete_refs(pkg_desc_t *pkg2rm) {
 // unlink files from the filesystem
 static
 void remove_from_fs(pkg_desc_t *pkg2rm) {
-	char *tmp = fmalloc(MAXPATHLEN);
+	char *tmp = fmalloc(MAXPATHLEN+1);
 	size_t root_len = strlen(opt_root);
 	strcpy(tmp, opt_root);
 

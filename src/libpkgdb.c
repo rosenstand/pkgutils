@@ -50,16 +50,16 @@ int pkg_unlock_db() {
 }
 
 void pkg_read_db(FILE *pkg_db_file) {
-	char *line = fmalloc(MAXPATHLEN);
+	char *line = fmalloc(MAXPATHLEN+1);
 	size_t line_size;
 	int cnt = 0;
 	pkg_desc_t *pkg = NULL;
 	pkg_file_t *file;
-	while (fgets(line, MAXPATHLEN, pkg_db_file)) {
+	while (fgets(line, MAXPATHLEN+1, pkg_db_file)) {
 		cnt++;
 		line_size = strlen(line) + 1;
-		line[line_size-2] = '\0'; // chop \n
-		
+		if (line[line_size-2] == '\n') line[line_size-2] = '\0';
+
 		if (line[0] == '\0') {
 			cnt = 0;
 			list_append(&pkg_db, pkg);

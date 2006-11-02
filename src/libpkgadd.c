@@ -63,8 +63,7 @@ static
 void read_config() {
 	char *config;
 	FILE *f;
-	char *line = NULL;
-	size_t line_size;
+	char line[MAXPATHLEN+1];
 	char *pline;
 	size_t lineno = 0;
 	int tmp;
@@ -78,8 +77,7 @@ void read_config() {
 	if (!f) die(config);
 
 	while (1) {
-		line = NULL;
-		if (getline(&line, &line_size, f) == -1) break;
+		if (!fgets(line, MAXPATHLEN+1, f)) break;
 		lineno++;
 
 		tmp = fetch_line_fields(line);
@@ -119,10 +117,8 @@ void read_config() {
 		rule_t *rule = fmalloc(sizeof(rule_t));
 		*rule = tmprule;
 		list_append(&config_rules, rule);
-
-		free(line);
 	}
-
+	
 	free(config);
 	fclose(f);
 	return;
@@ -370,7 +366,7 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 	pkg_file_t *file = (*_file)->data;
 	*_file = (*_file)->next; // XXX: valgrind thinks that that line leaks
 	                         //      memory :-)
-	char path[MAXPATHLEN];
+	char path[MAXPATHLEN+1];
 	const char *cpath;
 	cpath = archive_entry_pathname(en);
 
