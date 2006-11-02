@@ -388,7 +388,8 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 
 	int err;
 	if ((err = archive_read_extract(ar, en, ARCHIVE_EXTRACT_OWNER |
-	                                        ARCHIVE_EXTRACT_PERM)) < 0) {
+	                                        ARCHIVE_EXTRACT_PERM |
+	                                        ARCHIVE_EXTRACT_UNLINK)) < 0) {
 		const char *strerr = "Operation not permitted";
 		err = archive_errno(ar);
 		// XXX: investigate why libarchive sets EEXIST where EPERM
