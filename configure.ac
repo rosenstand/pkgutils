@@ -17,6 +17,9 @@ else
 	AC_MSG_ERROR([libarchive is needed to compile pkgutils]);
 fi
 
+sysconfdir="/etc"
+localstatedir="/var/lib"
+
 AC_OUTPUT([
 Makefile
 etc/Makefile
