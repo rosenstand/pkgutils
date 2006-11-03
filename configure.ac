@@ -4,12 +4,13 @@ AM_INIT_AUTOMAKE
 
 AC_LANG([C])
 AC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_SYS_LARGEFILE
 AC_HEADER_STDC
 
-AC_CHECK_LIB([archive], [archive_read_data], [AC_CHECK_HEADER([archive.h], [LIBARCHIVE='-larchive'])])
+AC_CHECK_LIB([archive], [archive_read_open_FILE], [AC_CHECK_HEADER([archive.h], [LIBARCHIVE='-larchive'])])
 if test -n "$LIBARCHIVE"; then
 	CFLAGS="$CFLAGS"
 	LDFLAGS="$LDFLAGS $LIBARCHIVE"
