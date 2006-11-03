@@ -20,9 +20,8 @@
 //  USA.
 
 #include <pkgutils/list.h>
-#include <malloc.h>
-#ifdef LIST_ABORT_ON_ERROR
 #include <stdlib.h>
+#ifdef LIST_ABORT_ON_ERROR
 #include <stdio.h>
 #endif
 
