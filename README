@@ -1,0 +1,2 @@
+If you're using version from git repository, please run 'autoreconf -i',
+that will create 'configure' and friends.
