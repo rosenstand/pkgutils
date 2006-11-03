@@ -15,7 +15,7 @@ if test -n "$LIBARCHIVE"; then
 	CFLAGS="$CFLAGS"
 	LDFLAGS="$LDFLAGS $LIBARCHIVE"
 else
-	AC_MSG_ERROR([libarchive is needed to compile pkgutils]);
+	AC_MSG_ERROR([libarchive >= 1.3 is needed to compile pkgutils]);
 fi
 
 sysconfdir="/etc"
