@@ -1,4 +1,4 @@
-AC_INIT([pkgutils], [1.2], [cbou@mail.ru])
+AC_INIT([pkgutils-c], [1.2], [cbou@mail.ru])
 AC_CONFIG_SRCDIR([src/pkgutils.c])
 AM_INIT_AUTOMAKE
 
