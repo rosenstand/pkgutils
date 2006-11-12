@@ -74,7 +74,10 @@ void read_config() {
 	strcpy(config, opt_root);
 	strcat(config, PKG_ADD_CONFIG);
 	f = fopen(config, "r");
-	if (!f) die(config);
+	if (!f) {
+		free(config);
+		return;
+	}
 
 	while (1) {
 		if (!fgets(line, MAXPATHLEN+1, f)) break;
