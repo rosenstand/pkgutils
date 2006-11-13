@@ -42,7 +42,7 @@ void print_usage(const char *argv0) {
 
 static
 void parse_opts(int argc, char *argv[]) {
-	char c;
+	int c;
 	struct option opts[] = {
 		{"force"      , 0, NULL, 'f'},
 		{"force-perms", 0, NULL, 'p'},

@@ -55,7 +55,7 @@ void print_usage(const char *argv0) {
 
 static
 void parse_opts(int argc, char *argv[]) {
-	char c;
+	int c;
 	struct option opts[] = {
 		{"installed",    0, NULL, 'i'},
 		{"list"     ,    1, NULL, 'l'},

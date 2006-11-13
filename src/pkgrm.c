@@ -37,7 +37,7 @@ void print_usage(const char *argv0) {
 
 static
 void parse_opts(int argc, char *argv[]) {
-	char c;
+	int c;
 	struct option opts[] = {
 		{"root"   , 1, NULL, 'r'},
 		{"help"   , 0, NULL, 'h'},
