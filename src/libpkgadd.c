@@ -371,7 +371,7 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 
 	if (!adjust_with_config(cpath, INSTALL)) return;
 
-	if (file->conflict == CONFLICT_SELF &&
+	if (file->conflict != CONFLICT_NONE &&
 	                   !adjust_with_config(cpath, UPGRADE)) {
 		strcpy(path, PKG_REJECT_DIR);
 		strcat(path, cpath);
