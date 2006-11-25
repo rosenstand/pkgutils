@@ -104,7 +104,8 @@ void print_footprint(struct archive *ar, struct archive_entry *en,
 	//      not set any type to the hardlinks, but should.
 	if (archive_entry_hardlink(en)) {
 		st.st_mode = st.st_mode |= S_IFREG;
-		// libarchive do not set size for the hardlinks
+		// XXX: libarchive do not set size for the hardlinks,
+		// thus currently we can't handle empty hardlinks :-(
 		st.st_size = 1;
 	}
 
