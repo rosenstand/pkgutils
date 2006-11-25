@@ -42,7 +42,7 @@ char *opt_list = NULL,
 
 static
 void print_usage(const char *argv0) {
-	printf("Usage: %s [-ilofr]\n", argv0);
+	printf("Usage: %s [-ilofrhv]\n", argv0);
 	puts("  -i  --installed           list installed packages\n"
 	     "  -l  --list <package|file> list files for file or package\n"
 	     "  -o  --owner <pattern>     print package owner\n"
