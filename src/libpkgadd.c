@@ -547,10 +547,8 @@ cleanup:
 	}
 	if (pkgf) fclose(pkgf);
 	if (curdir) {
-		if (fchdir(fileno(curdir)) < 0) {
-			fprintf(stderr, "Can't back to curdir: %s\n",
-			        strerror(errno));
-		}
+		if (fchdir(fileno(curdir)) < 0)
+			die(stderr, "Can't come back to CWD");
 		fclose(curdir);
 	}
 	cleanup_config();
