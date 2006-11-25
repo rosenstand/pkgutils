@@ -27,7 +27,8 @@ typedef enum {
 	CONFLICT_SELF = 1,  // pseudo conflict when upgrading
 	CONFLICT_DB   = 2,  // file conflict in database
 	CONFLICT_FS   = 4,  // file conflict in filesystem
-	CONFLICT_PERM = 8   // mode/ownership conflict
+	CONFLICT_PERM = 8,  // mode/ownership conflict
+	CONFLICT_REF  = 16  // reference conflict
 } pkg_conflict_type_t;
 
 typedef struct {
