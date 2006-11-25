@@ -31,6 +31,7 @@ int die(const char *str);
 void *fmalloc(size_t size);
 const char *base_filename(const char *name);
 
+void *check_and_alloc_root(char *root);
 int pkg_cmp(const void *a, const void *b);
 int file_cmp(const void *a, const void *b);
 void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,

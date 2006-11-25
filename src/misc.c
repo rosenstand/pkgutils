@@ -64,6 +64,25 @@ const char *base_filename(const char *name) {
 	return name;
 }
 
+void *check_and_alloc_root(char *root) {
+	char *tmp;
+	size_t root_len;
+
+	if (!root) {
+		root = fmalloc(2);
+		strcpy(root, "/");
+		return root;
+	}
+
+	tmp = root;
+	root_len = strlen(tmp);
+	root = fmalloc(root_len + 1 + (tmp[root_len] != '/' ? 1 : 0));
+	strcpy(root, tmp);
+	if (tmp[root_len] != '/') strcat(root, "/");
+
+	return root;
+}
+
 int pkg_cmp(const void *a, const void *b) {
 	pkg_desc_t *pkga = (*(const list_entry_t **)a)->data;
 	pkg_desc_t *pkgb = (*(const list_entry_t **)b)->data;

@@ -64,14 +64,18 @@ void parse_opts(int argc, char *argv[]) {
 }
 
 int PKGRM_ENTRY(int argc, char *argv[]) {
-	opt_root = "/";
+	opt_root = NULL;
 	parse_opts(argc, argv);
+	opt_root = check_and_alloc_root(opt_root);
+
 	pkg_init_db();
 	while (optind < argc) {
 		pkg_rm(argv[optind]);
 		optind++;
 	}
 	pkg_free_db();
+
+	free(opt_root);
 	exit(0);
 	return 0;
 }
