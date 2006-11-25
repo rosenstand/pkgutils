@@ -520,14 +520,12 @@ int pkg_add(const char *pkg_path, int opts) {
 	list_entry_t *tmp = pkg->files.head;
 	do_archive(pkgf, extract_files, &tmp, NULL);
 
-	// If conflicts found and forced, we need to clear conflict flag.
 	if (found_conflicts) {
+		// In case of forced conflicts, we need clear conflict
+		// flags in new package and whole db, and remove from
+		// db files which are overwritten by new package.
 		cleanup_pkg(pkg, 0);
-		// In case of forced database conflicts, we need cleanup
-		// whole database and remove files which are overwritten
-		// by new package.
-		if (found_conflicts & CONFLICT_DB)
-			cleanup_pkg_db(pkg, 1);
+		cleanup_pkg_db(pkg, 1);
 	}
 
 	pkg = NULL;
