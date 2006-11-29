@@ -211,9 +211,9 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 			else pkg_file->conflict = CONFLICT_PERM;
 		}
 		else if (S_ISDIR(pkg_file->mode) && (
-		                           pkg_file->mode != st.st_mode
-		                        || pkg_file->uid != st.st_uid
-		                        || pkg_file->gid != st.st_gid)) {
+		                        pkg_file->mode != st.st_mode ||
+		                        pkg_file->uid != st.st_uid ||
+		                        pkg_file->gid != st.st_gid)) {
 			pkg_file->conflict = CONFLICT_PERM;
 		}
 		else if (!S_ISDIR(pkg_file->mode) &&
