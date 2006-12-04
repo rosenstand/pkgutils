@@ -152,7 +152,7 @@ int owner() {
 	if (opt_owner[0] == '/') strcpy(opt_owner, opt_owner+1);
 
 	if (regcomp(&re, opt_owner, REG_EXTENDED | REG_NOSUB)) {
-		fputs("Failed to compile regex.\n", stderr);
+		fputs("Failed to compile regular expression\n", stderr);
 		return 1;
 	}
 	
@@ -206,8 +206,8 @@ int list() {
 		}
 	}
 	pkg_free_db();
-	if (ret) fprintf(stderr, "\"%s\" is neither the installed package nor "
-	                 "the package file.\n", opt_list);
+	if (ret) fprintf(stderr, "\"%s\" is neither an installed package nor "
+	                 "a package archive\n", opt_list);
 	return ret;
 }
 

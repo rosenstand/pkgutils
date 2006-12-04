@@ -95,7 +95,7 @@ void remove_from_fs(pkg_desc_t *pkg2rm) {
 		strcat(tmp, file2rm->path);
 		dbg("removing %s\n", tmp);
 		if (remove(tmp))
-			fprintf(stderr, "can't remove %s: %s\n", tmp,
+			fprintf(stderr, "Can't remove %s: %s\n", tmp,
 			        strerror(errno));
 		_file2rm = _file2rm->next;
 		list_delete(&pkg2rm->files, _file2rm->prev);
@@ -119,7 +119,7 @@ int pkg_rm(const char *pkg_name) {
 	}
 
 	if (!pkg2rm) {
-		fprintf(stderr, "Package \"%s\" not found.\n", pkg_name);
+		fprintf(stderr, "Package \"%s\" is not installed\n", pkg_name);
 		return -1;
 	}
 
@@ -133,5 +133,4 @@ int pkg_rm(const char *pkg_name) {
 	pkg_commit_db();
 
 	return 0;
-
 }

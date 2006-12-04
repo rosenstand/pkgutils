@@ -36,16 +36,16 @@ void pkg_lock_db() {
 	strcat(dbdirpath, PKG_DB_DIR);
 
 	db_lock = open(dbdirpath, 0);
-	if (db_lock < 0) die("Can't open " PKG_DB_DIR " for the lock.");
+	if (db_lock < 0) die("Can't open " PKG_DB_DIR " for locking");
 	if (flock(db_lock, LOCK_EX | LOCK_NB))
-		die("database in use");
+		die("Can't lock " PKG_DB_DIR);
 	free(dbdirpath);
 	return;
 }
 
 int pkg_unlock_db() {
 	if (flock(db_lock, LOCK_UN))
-		die("can't unlock " PKG_DB_DIR);
+		die("Can't unlock " PKG_DB_DIR);
 	return close(db_lock);
 }
 
@@ -130,7 +130,7 @@ void pkg_init_db() {
 	list_init(&pkg_db);
 	pkg_read_db(pkg_db_file);
 
-	if (fclose(pkg_db_file)) die("can't close db file");
+	if (fclose(pkg_db_file)) die("Can't close database");
 	free(dbpath);
 	return;
 }
@@ -173,7 +173,7 @@ int pkg_commit_db() {
 	fclose(new_dbfile);
 
 	if (rename(new_dbpath, dbpath))
-		die("Can't overwrite old database with new one");
+		die("Can't replace old database");
 	free(dbpath);
 	free(new_dbpath);
 	return 0;

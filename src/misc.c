@@ -39,15 +39,14 @@ void pkgutils_version() {
 }
 
 int die(const char *str) {
-	printf("%s: ", str);
-	puts(strerror(errno));
+	fprintf(stderr, "%s: %s\n", str, strerror(errno));
 	abort();
 	return 1;
 }
 
 static
 void malloc_failed() {
-	puts("malloc failed. out of memory");
+	fputs("Out of memory", stderr);
 	abort();
 	return;
 }

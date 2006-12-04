@@ -29,6 +29,8 @@ int main(int argc, char *argv[]) {
 	if (!strcmp(name, "pkgadd")) PKGADD_ENTRY(argc,argv);
 	else if (!strcmp(name, "pkgrm")) PKGRM_ENTRY(argc,argv);
 	else if (!strcmp(name, "pkginfo")) PKGINFO_ENTRY(argc,argv);
-	else puts("You should not run pkgutils program directly.");
+	else puts("This is a static all-in-one version of pkgadd, pkginfo "
+	          "and pkgrm.\n"
+	          "Invoke it with the name of the utility you want.");
 	return 1;
 }
