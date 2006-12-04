@@ -357,8 +357,8 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 	*_file = (*_file)->next; // XXX: valgrind thinks that that line leaks
 	                         //      memory :-)
 	char path[MAXPATHLEN+1];
-	const char *cpath;
-	cpath = archive_entry_pathname(en);
+	const char *cpath = archive_entry_pathname(en);
+	mode_t mode = archive_entry_mode(en);
 
 	if (!adjust_with_config(cpath, INSTALL)) return;
 
@@ -367,8 +367,11 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 		strcpy(path, PKG_REJECT_DIR);
 		strcat(path, cpath);
 		archive_entry_set_pathname(en, path);
-		fprintf(stderr, "rejecting %s\n", cpath);
-		dbg("to %s%s\n", opt_root, path);
+		if (!S_ISDIR(mode)) {
+			fprintf(stderr, "rejecting %s\n", cpath);
+			dbg("to %s%s\n", opt_root, path);
+		}
+		else dbg("rejecting %s to %s%s\n", cpath, opt_root, path);
 	}
 	else dbg("installing %s%s\n", opt_root, cpath);
 
