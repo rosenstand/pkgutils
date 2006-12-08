@@ -228,7 +228,7 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 
 static
 void old_reference(void **ai, void **bj, void *arg) {
-        pkg_desc_t *old_pkg = arg;
+	pkg_desc_t *old_pkg = arg;
 	pkg_file_t *old_pkgfile = (*(list_entry_t**)ai)->data;
 
 	old_pkgfile->conflict = CONFLICT_REF;
