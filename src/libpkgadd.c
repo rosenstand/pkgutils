@@ -464,10 +464,11 @@ void cleanup_pkg(pkg_desc_t *pkg, int remove) {
 }
 
 static
-void cleanup_pkg_db() {
+void cleanup_pkg_db(pkg_desc_t *except_pkg, int remove) {
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
-		cleanup_pkg(pkg, 1);
+		if (pkg == except_pkg) continue;
+		else cleanup_pkg(pkg, remove);
 	}
 	return;
 }
@@ -515,16 +516,19 @@ int pkg_add(const char *pkg_path, int opts) {
 	}
 
 	if (old_pkg) del_old_pkg(old_pkg);
-	cleanup_pkg_db();
 	list_append(&pkg_db, pkg);
 	pkg_commit_db();
 
 	list_entry_t *tmp = pkg->files.head;
 	do_archive(pkgf, extract_files, &tmp, NULL);
 
-	// In case of forced conflicts, we need clear conflict
-	// flags in new package.
-	if (found_conflicts) cleanup_pkg(pkg, 0);
+	if (found_conflicts) {
+		// In case of forced conflicts, we need clear conflict
+		// flags in new package and whole db, and remove from
+		// db files which are overwritten by new package.
+		cleanup_pkg(pkg, 0);
+		cleanup_pkg_db(pkg, 1);
+	}
 
 	pkg = NULL;
 cleanup:
