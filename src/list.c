@@ -27,7 +27,7 @@
 
 void *list_malloc_failed() {
 	#ifdef LIST_ABORT_ON_ERROR
-	puts("list: malloc failed\n");
+	fputs("list: malloc() failed\n", stderr);
 	abort();
 	#endif
 	return NULL;

@@ -104,7 +104,7 @@ void read_config() {
 
 		pline = line + strlen(line) + 1;
 		if (regcomp(&tmprule.regex, pline, REG_EXTENDED | REG_NOSUB)) {
-			fprintf(stderr, "%s: %s: can't compile regex\n",
+			fprintf(stderr, "%s: %s: invalid regex\n",
 			        config, pline);
 			abort();
 		}
@@ -141,7 +141,7 @@ int report_conflicts(pkg_desc_t *pkg) {
 	}
 
 	if (types & CONFLICT_DB) {
-		puts("Following files conflicting with database:");
+		puts("Files already registered in database:");
 		list_for_each(_file, &pkg->files) {
 			file = _file->data;
 			if (file->conflict == CONFLICT_DB) puts(file->path);
@@ -149,7 +149,7 @@ int report_conflicts(pkg_desc_t *pkg) {
 		puts("");
 	}
 	if (types & CONFLICT_FS) {
-		puts("Following files conflicting with filesystem:");
+		puts("Files already present on filesystem:");
 		list_for_each(_file, &pkg->files) {
 			file = _file->data;
 			if (file->conflict == CONFLICT_FS) puts(file->path);
@@ -157,7 +157,7 @@ int report_conflicts(pkg_desc_t *pkg) {
 		puts("");
 	}
 	if (types & CONFLICT_PERM) {
-		puts("Following files conflicting by mode or ownership:");
+		puts("Directories with changed mode or ownership:");
 		struct stat st;
 		char smode[11];
 
@@ -198,8 +198,8 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 		
 		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
 			if (stat(pkg_file->path, &st) != 0) {
-				fprintf(stderr, "can't stat %s%s", opt_root,
-				        pkg_file->path);
+				fprintf(stderr, "failed to stat %s%s",
+					opt_root, pkg_file->path);
 				die("");
 			}
 			if (S_ISDIR(st.st_mode)) {
@@ -357,8 +357,8 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 	*_file = (*_file)->next; // XXX: valgrind thinks that that line leaks
 	                         //      memory :-)
 	char path[MAXPATHLEN+1];
-	const char *cpath;
-	cpath = archive_entry_pathname(en);
+	const char *cpath = archive_entry_pathname(en);
+	mode_t mode = archive_entry_mode(en);
 
 	if (!adjust_with_config(cpath, INSTALL)) return;
 
@@ -367,8 +367,11 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 		strcpy(path, PKG_REJECT_DIR);
 		strcat(path, cpath);
 		archive_entry_set_pathname(en, path);
-		fprintf(stderr, "rejecting %s\n", cpath);
-		dbg("to %s%s\n", opt_root, path);
+		if (!S_ISDIR(mode)) {
+			fprintf(stderr, "rejecting %s\n", cpath);
+			dbg("to %s%s\n", opt_root, path);
+		}
+		else dbg("rejecting %s to %s%s\n", cpath, opt_root, path);
 	}
 	else dbg("installing %s%s\n", opt_root, cpath);
 
@@ -420,8 +423,8 @@ void del_old_pkg(pkg_desc_t *old_pkg) {
 		pkg_file_t *file = _file->data;
 		if (!file->conflict) {
 			if (remove(file->path)) {
-				fprintf(stderr, "can't remove %s%s", opt_root,
-				        file->path);
+				fprintf(stderr, "Can't remove %s%s: %s\n",
+					opt_root, file->path, strerror(errno));
 			}
 		}
 		_file = _file->next;
@@ -484,14 +487,13 @@ int pkg_add(const char *pkg_path, int opts) {
 		goto cleanup;
 	}
 	curdir = fopen(".", "r");
-	if (!curdir) die("Can't obtain current directory");
-	if (chdir(opt_root)) die("Can't chdir to root");
+	if (!curdir) die("Failed to obtain current directory");
+	if (chdir(opt_root)) die("Can't chdir to root directory");
 
 	pkg = fmalloc(sizeof(pkg_desc_t));
 	list_init(&pkg->files);
 	if (pkg_make_desc(pkg_path, pkg)) {
-		fprintf(stderr, "%s does not look like a package.\n",
-		        pkg_path);
+		fprintf(stderr, "'%s' is not a valid package name\n", pkg_path);
 		pkg->name = NULL;
 		pkg->version = NULL;
 		goto cleanup;
@@ -542,7 +544,7 @@ cleanup:
 	if (pkgf) fclose(pkgf);
 	if (curdir) {
 		if (fchdir(fileno(curdir)) < 0)
-			die("Can't come back to CWD");
+			die("Can't go back to CWD");
 		fclose(curdir);
 	}
 	cleanup_config();
