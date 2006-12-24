@@ -351,11 +351,12 @@ int adjust_with_config(const char *path, rule_type_t type) {
 
 static
 void extract_files(struct archive *ar, struct archive_entry *en,
-                   void *__file, void *unused) {
-	list_entry_t **_file = *(list_entry_t***)__file;
-	pkg_file_t *file = (*_file)->data;
-	*_file = (*_file)->next; // XXX: valgrind thinks that that line leaks
-	                         //      memory :-)
+                   void *___file, void *unused) {
+	list_entry_t **__file = ___file;
+	list_entry_t *_file = *__file;
+	pkg_file_t *file = _file->next->data;
+	*__file = _file->next;
+	
 	char path[MAXPATHLEN+1];
 	const char *cpath = archive_entry_pathname(en);
 	mode_t mode = archive_entry_mode(en);
