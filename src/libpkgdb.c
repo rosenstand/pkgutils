@@ -143,17 +143,12 @@ void sort_db() {
 	pkgs = fmalloc(sizeof(void*) * pkg_db.size);
 
 	i = 0;
-	list_for_each(_pkg, &pkg_db) {
-		pkgs[i++] = _pkg->data;
-	}
+	list_for_each(_pkg, &pkg_db) pkgs[i++] = _pkg->data;
 
 	qsort(pkgs, pkg_db.size, sizeof(void*), pkg_cmp2);
 
 	i = 0;
-	list_for_each(_pkg, &pkg_db) {
-		_pkg->data = pkgs[i];
-		i++;
-	}
+	list_for_each(_pkg, &pkg_db) _pkg->data = pkgs[i++];
 
 	free(pkgs);
 	return;

@@ -228,7 +228,6 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 
 static
 void old_reference(void **ai, void **bj, void *arg) {
-	pkg_desc_t *old_pkg = arg;
 	pkg_file_t *old_pkgfile = (*(list_entry_t**)ai)->data;
 
 	old_pkgfile->conflict = CONFLICT_REF;
@@ -241,7 +240,6 @@ static
 void self_conflict(void **ai, void **bj, void *arg) {
 	pkg_file_t *new_pkgfile = (*(list_entry_t**)ai)->data;
 	pkg_file_t *old_pkgfile = (*(list_entry_t**)bj)->data;
-	pkg_desc_t *old_pkg = arg;
 
 	new_pkgfile->conflict = CONFLICT_SELF;
 	old_pkgfile->conflict = CONFLICT_SELF;
@@ -319,13 +317,13 @@ void adjust_with_db(pkg_desc_t *new_pkg, pkg_desc_t *old_pkg) {
 		// later, as they'll overwritten by newfiles
 		intersect_uniq(newfiles, new_pkg->files.size,
 		               oldfiles, old_pkg->files.size,
-		               file_cmp, self_conflict, NULL, old_pkg);
+		               file_cmp, self_conflict, NULL, NULL);
 		
 		// intersections between oldfiles and dbfiles are references
 		// which must be removed from oldfiles later
 		intersect_uniq(oldfiles, old_pkg->files.size,
 		               dbfiles, dbsize,
-		               file_cmp, old_reference, NULL, old_pkg);
+		               file_cmp, old_reference, NULL, NULL);
 		
 		free(oldfiles);
 	}
