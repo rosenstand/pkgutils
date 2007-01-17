@@ -523,9 +523,7 @@ int pkg_add(const char *pkg_path, int opts) {
 	list_entry_t *tmp = pkg->files.head;
 	do_archive(pkgf, extract_files, &tmp, NULL);
 
-	// In case of forced conflicts, we need clear conflict
-	// flags in new package.
-	if (found_conflicts) cleanup_pkg(pkg, 0);
+	cleanup_pkg(pkg, 0); // clean up conflicts flags
 
 	pkg = NULL;
 cleanup:
