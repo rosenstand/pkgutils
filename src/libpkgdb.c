@@ -135,6 +135,30 @@ void pkg_init_db() {
 	return;
 }
 
+static
+void sort_db() {
+	void **pkgs;
+	int i;
+
+	pkgs = fmalloc(sizeof(void*) * pkg_db.size);
+
+	i = 0;
+	list_for_each(_pkg, &pkg_db) {
+		pkgs[i++] = _pkg->data;
+	}
+
+	qsort(pkgs, pkg_db.size, sizeof(void*), pkg_cmp2);
+
+	i = 0;
+	list_for_each(_pkg, &pkg_db) {
+		_pkg->data = pkgs[i];
+		i++;
+	}
+
+	free(pkgs);
+	return;
+}
+
 int pkg_commit_db() {
 	size_t dbpath_size;
 	char *dbpath;
@@ -153,6 +177,7 @@ int pkg_commit_db() {
 	new_dbfile = fopen(new_dbpath, "w");
 	if (!new_dbfile) die(new_dbpath);
 
+	sort_db();
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
 		fputs(pkg->name, new_dbfile);

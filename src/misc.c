@@ -88,6 +88,12 @@ int pkg_cmp(const void *a, const void *b) {
 	return strcmp(pkga->name, pkgb->name);
 }
 
+int pkg_cmp2(const void *a, const void *b) {
+	pkg_desc_t *pkga = *(pkg_desc_t**)a;
+	pkg_desc_t *pkgb = *(pkg_desc_t**)b;
+	return strcmp(pkga->name, pkgb->name);
+}
+
 int file_cmp(const void *a, const void *b) {
 	pkg_file_t *filea = (*(const list_entry_t **)a)->data;
 	pkg_file_t *fileb = (*(const list_entry_t **)b)->data;
