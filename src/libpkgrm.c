@@ -87,7 +87,10 @@ static
 void remove_from_fs(pkg_desc_t *pkg2rm) {
 	char *tmp = fmalloc(MAXPATHLEN+1);
 	size_t root_len = strlen(opt_root);
+
 	strcpy(tmp, opt_root);
+	strcat(tmp, "/");
+	root_len++;
 
 	list_for_each_r(_file2rm, &pkg2rm->files) {
 		pkg_file_t *file2rm = _file2rm->data;

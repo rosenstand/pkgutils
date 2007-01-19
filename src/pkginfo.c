@@ -226,9 +226,8 @@ int installed() {
 
 int PKGINFO_ENTRY(int argc, char *argv[]) {
 	int ret = 1;
-	opt_root = NULL;
+	opt_root = "";
 	parse_opts(argc, argv);
-	opt_root = check_and_alloc_root(opt_root);
 	
 	if (opt_installed) ret = installed();
 	else if (opt_list) ret = list();
@@ -236,7 +235,6 @@ int PKGINFO_ENTRY(int argc, char *argv[]) {
 	else if (opt_footprint) ret = footprint();
 	else print_usage(argv[0]);
 
-	free(opt_root);
 	exit(ret);
 	return ret;
 }

@@ -172,12 +172,12 @@ int report_conflicts(pkg_desc_t *pkg) {
 			       mode_string(file->mode, smode), file->uid,
 			       file->gid, file->path);
 			if (lstat(file->path, &st) < 0) {
-				fprintf(stderr, "can't stat %s%s: %s\n",
+				fprintf(stderr, "can't stat %s/%s: %s\n",
 				        opt_root, file->path, strerror(errno));
 				puts("");
 				continue;
 			}
-			printf("%s %d/%d %s%s\n",
+			printf("%s %d/%d %s/%s\n",
 			       mode_string(st.st_mode, smode), st.st_uid,
 			       st.st_gid, opt_root, file->path);
 			puts("");
@@ -201,12 +201,12 @@ int adjust_with_fs(pkg_desc_t *pkg) {
 		
 		if (S_ISDIR(pkg_file->mode) && S_ISLNK(st.st_mode)) {
 			if (stat(pkg_file->path, &st) != 0) {
-				fprintf(stderr, "failed to stat %s%s",
+				fprintf(stderr, "failed to stat %s/%s",
 					opt_root, pkg_file->path);
 				die("");
 			}
 			if (S_ISDIR(st.st_mode)) {
-				dbg("%s%s stored as symlink\n", opt_root,
+				dbg("%s/%s stored as symlink\n", opt_root,
 				    pkg_file->path);
 				pkg_file->mode &= ~S_IFDIR;
 				pkg_file->mode |= S_IFLNK;
@@ -371,11 +371,11 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 		archive_entry_set_pathname(en, path);
 		if (!S_ISDIR(mode)) {
 			fprintf(stderr, "rejecting %s\n", cpath);
-			dbg("to %s%s\n", opt_root, path);
+			dbg("to %s/%s\n", opt_root, path);
 		}
-		else dbg("rejecting %s to %s%s\n", cpath, opt_root, path);
+		else dbg("rejecting %s to %s/%s\n", cpath, opt_root, path);
 	}
-	else dbg("installing %s%s\n", opt_root, cpath);
+	else dbg("installing %s/%s\n", opt_root, cpath);
 
 	int err;
 	if ((err = archive_read_extract(ar, en, ARCHIVE_EXTRACT_OWNER |
@@ -386,7 +386,7 @@ void extract_files(struct archive *ar, struct archive_entry *en,
 		// XXX: investigate why libarchive sets EEXIST where EPERM
 		//      expected
 		if (err != EEXIST) strerr = archive_error_string(ar);
-		fprintf(stderr, "Failed to extract %s%s: %s\n", opt_root,
+		fprintf(stderr, "Failed to extract %s/%s: %s\n", opt_root,
 		        archive_entry_pathname(en), strerr);
 	}
 	return;
@@ -425,7 +425,7 @@ void del_old_pkg(pkg_desc_t *old_pkg) {
 		pkg_file_t *file = _file->data;
 		if (!file->conflict) {
 			if (remove(file->path)) {
-				fprintf(stderr, "Can't remove %s%s: %s\n",
+				fprintf(stderr, "Can't remove %s/%s: %s\n",
 					opt_root, file->path, strerror(errno));
 			}
 		}
@@ -490,7 +490,8 @@ int pkg_add(const char *pkg_path, int opts) {
 	}
 	curdir = fopen(".", "r");
 	if (!curdir) die("Failed to obtain current directory");
-	if (chdir(opt_root)) die("Can't chdir to root directory");
+	if (chdir(strcmp(opt_root, "") ? opt_root : "/"))
+		die("Can't chdir to root directory");
 
 	pkg = fmalloc(sizeof(pkg_desc_t));
 	list_init(&pkg->files);
