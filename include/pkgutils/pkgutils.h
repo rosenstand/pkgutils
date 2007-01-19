@@ -38,6 +38,8 @@ list_t pkg_db;
 int db_lock;
 
 // database managing
+void pkg_lock_db();
+void pkg_unlock_db();
 void pkg_init_db();
 void pkg_free_db();
 int pkg_commit_db();

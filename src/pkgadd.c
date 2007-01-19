@@ -81,6 +81,7 @@ int PKGADD_ENTRY(int argc, char *argv[]) {
 	parse_opts(argc, argv);
 	opt_root = check_and_alloc_root(opt_root);
 
+	pkg_lock_db();
 	pkg_init_db();
 	while (optind < argc) {
 		found_conflicts = pkg_add(argv[optind], opt_force);
@@ -91,6 +92,7 @@ int PKGADD_ENTRY(int argc, char *argv[]) {
 		optind++;
 	}
 	pkg_free_db();
+	pkg_unlock_db();
 
 	free(opt_root);
 	exit(0);

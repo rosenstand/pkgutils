@@ -1,4 +1,4 @@
 SUBDIRS = etc include man scripts src
 
 install-data-local:
-	$(mkdir_p) $(DESTDIR)$(localstatedir)/lib/pkg
+	$(INSTALL) -m 0751 -d $(DESTDIR)$(localstatedir)/lib/pkg

@@ -46,12 +46,15 @@ void pkg_lock_db() {
 	return;
 }
 
-int pkg_unlock_db() {
+void pkg_unlock_db() {
 	if (flock(db_lock, LOCK_UN))
 		die("Can't unlock " PKG_DB_DIR);
-	return close(db_lock);
+	if (close(db_lock))
+		die("Can't close " PKG_DB_DIR);
+	return;
 }
 
+static
 void pkg_read_db(FILE *pkg_db_file) {
 	char *line = fmalloc(MAXPATHLEN+1);
 	size_t line_size;
@@ -101,7 +104,6 @@ void pkg_read_db(FILE *pkg_db_file) {
 }
 
 void pkg_free_db() {
-	pkg_unlock_db();
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
 		list_for_each(_file, &pkg->files) {
@@ -126,7 +128,6 @@ void pkg_init_db() {
 	strcpy(dbpath, opt_root);
 	strcat(dbpath, PKG_DB_FILE);
 
-	pkg_lock_db();
 	pkg_db_file = fopen(dbpath, "r");
 	if (!pkg_db_file) die(dbpath);
 
