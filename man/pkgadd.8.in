@@ -10,6 +10,11 @@ a software package. A \fIpackage\fP is an archive of files (.pkg.tar.gz).
 .TP
 .B "\-u, \-\-upgrade"
 Upgrade/replace package with the same name as <file>.
+
+\fBNOTE!\fP This option is meaningless in pkgutils-c, it's used for
+compatibility with C++ish pkgutils. \fBpkgadd\fP will install
+new package and upgrade if it was already installed.
+
 .TP
 .B "\-f, \-\-force"
 Force installation, overwrite conflicting files. If the package
@@ -17,6 +22,15 @@ that is about to be installed contains files that are already
 installed this option will cause all those files to be overwritten.
 This option should be used with care, preferably not at all.
 .TP
+
+.B "-p, \-\-force\-perms"
+Ignore permissions conflicts. By default pkgadd will fail to change
+permissions on files and directories, this is done for two reasons:
+you will notice when some files on your system changed permissions,
+and you will in safe if you'll try to install miss-built package
+(e.g. with wrong permissions on /var directory).
+.TP
+
 .B "\-r, \-\-root <path>"
 Specify alternative installation root (default is "/"). This
 should \fInot\fP be used as a way to install software into
@@ -37,17 +51,19 @@ event type is allowed, in which case the first rule will have the lowest priorit
 will have the highest priority. Example:
 
 .nf
-UPGRADE         ^etc/.*$                NO
-UPGRADE         ^var/log/.*$            NO
-UPGRADE         ^etc/X11/.*$            YES
-UPGRADE         ^etc/X11/XF86Config$    NO
+UPGRADE         "^etc/.*$"                NO
+UPGRADE         "^var/log/.*$"            NO
+UPGRADE         "^etc/X11/.*$"            YES
+UPGRADE         "^etc/X11/XF86Config$"    NO
+UPGRADE         "^etc/rc\\.local$"         NO
 .fi
 
 The above example will cause pkgadd to never upgrade anything in /etc/ or /var/log/ (subdirectories included),
 except files in /etc/X11/ (subdirectories included), unless it is the file /etc/X11/XF86Config.
 The default rule is to upgrade/install everything, rules in this file are exceptions to that rule.
 (NOTE! A \fIpattern\fP should never contain an initial "/" since you are referring to the files in the
-package, not the files on the disk.)
+package, not the files on the disk. Also note that "\\" inside regular expression should be escaped, e.g.
+"etc/rc\\\\.local$".)
 
 If pkgadd finds that a specific file should not be upgraded it will install it under \fI/var/lib/pkg/rejected/\fP.
 The user is then free to examine/use/remove that file manually.
