@@ -29,6 +29,9 @@
 #include <sys/param.h>
 #include <pkgutils/pkgutils.h>
 
+#define PKG_DB_DIR   LOCALSTATEDIR"/lib/pkg"
+#define PKG_DB_FILE  PKG_DB_DIR"/db"
+
 void pkg_lock_db() {
 	char *dbdirpath;
 	dbdirpath = fmalloc(strlen(opt_root) + sizeof(PKG_DB_DIR));
@@ -119,9 +122,9 @@ void pkg_init_db() {
 	FILE *pkg_db_file;
 	char *dbpath;
 
-	dbpath = fmalloc(strlen(opt_root) + sizeof(PKG_DB_DIR "db"));
+	dbpath = fmalloc(strlen(opt_root) + sizeof(PKG_DB_FILE));
 	strcpy(dbpath, opt_root);
-	strcat(dbpath, PKG_DB_DIR "db");
+	strcat(dbpath, PKG_DB_FILE);
 
 	pkg_lock_db();
 	pkg_db_file = fopen(dbpath, "r");
@@ -160,10 +163,10 @@ int pkg_commit_db() {
 	char *new_dbpath;
 	FILE *new_dbfile;
 
-	dbpath_size = strlen(opt_root) + sizeof(PKG_DB_DIR "db");
+	dbpath_size = strlen(opt_root) + sizeof(PKG_DB_FILE);
 	dbpath = fmalloc(dbpath_size);
 	strcpy(dbpath, opt_root);
-	strcat(dbpath, PKG_DB_DIR "db");
+	strcat(dbpath, PKG_DB_FILE);
 
 	new_dbpath = fmalloc(dbpath_size + sizeof(".new") - 1);
 	strcpy(new_dbpath, dbpath);

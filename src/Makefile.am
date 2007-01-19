@@ -1,5 +1,7 @@
-AM_CFLAGS		= -std=c99
-INCLUDES		= -I$(top_srcdir)/include
+AM_CFLAGS		= -std=c99                             \
+                          -DSYSCONFDIR=\"@sysconfdir@\"        \
+                          -DLOCALSTATEDIR=\"@localstatedir@\"
+INCLUDES		= -I$(top_srcdir)/include -include ../config.h
 EXTRA_DIST		= entry.h
 
 lib_LTLIBRARIES		= libpkg.la

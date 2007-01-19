@@ -9,6 +9,7 @@ AC_PROG_INSTALL
 AC_PROG_LIBTOOL
 AC_SYS_LARGEFILE
 AC_HEADER_STDC
+AM_CONFIG_HEADER(config.h)
 
 AC_CHECK_LIB([archive], [archive_read_open_FILE], [AC_CHECK_HEADER([archive.h], [LIBARCHIVE='-larchive'])])
 if test -n "$LIBARCHIVE"; then
@@ -17,9 +18,6 @@ if test -n "$LIBARCHIVE"; then
 else
 	AC_MSG_ERROR([libarchive >= 1.3 is needed to compile pkgutils]);
 fi
-
-sysconfdir="/etc"
-localstatedir="/var/lib"
 
 AC_OUTPUT([
 Makefile

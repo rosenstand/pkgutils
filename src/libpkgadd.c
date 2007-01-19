@@ -34,6 +34,9 @@
 #include <assert.h>
 #include <pkgutils/pkgutils.h>
 
+#define PKG_REJECT_DIR  LOCALSTATEDIR"/lib/pkg/rejected/"
+#define PKG_ADD_CONFIG  SYSCONFDIR"/pkgadd.conf"
+
 static
 list_t config_rules;
 
