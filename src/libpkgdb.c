@@ -34,23 +34,21 @@
 
 void pkg_lock_db() {
 	char *dbdirpath;
+
 	dbdirpath = fmalloc(strlen(opt_root) + sizeof(PKG_DB_DIR));
 	strcpy(dbdirpath, opt_root);
 	strcat(dbdirpath, PKG_DB_DIR);
 
 	db_lock = open(dbdirpath, 0);
-	if (db_lock < 0) die("Can't open " PKG_DB_DIR " for locking");
-	if (flock(db_lock, LOCK_EX | LOCK_NB))
-		die("Can't lock " PKG_DB_DIR);
+	if (db_lock < 0) die(dbdirpath);
+	if (flock(db_lock, LOCK_EX | LOCK_NB)) die(dbdirpath);
 	free(dbdirpath);
 	return;
 }
 
 void pkg_unlock_db() {
-	if (flock(db_lock, LOCK_UN))
-		die("Can't unlock " PKG_DB_DIR);
-	if (close(db_lock))
-		die("Can't close " PKG_DB_DIR);
+	if (flock(db_lock, LOCK_UN)) die("Can't unlock database");
+	if (close(db_lock)) die("Can't close database directory");
 	return;
 }
 
