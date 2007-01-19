@@ -1,4 +1,4 @@
-AM_CFLAGS		= -std=c99                             \
+AM_CFLAGS               = -std=c99                             \
                           -DSYSCONFDIR=\"@sysconfdir@\"        \
                           -DLOCALSTATEDIR=\"@localstatedir@\"
 INCLUDES                = -I$(top_srcdir)/include -include ../config.h
