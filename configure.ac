@@ -20,18 +20,18 @@ else
 fi
 
 AC_OUTPUT([
-Makefile
-etc/Makefile
-include/Makefile
-include/pkgutils/Makefile
-man/Makefile
-man/pkgadd.8
-man/pkginfo.8
-man/pkgmk.8
-man/pkgrm.8
-man/rejmerge.8
-scripts/Makefile
-scripts/pkgmk
-scripts/rejmerge
-src/Makefile
+	Makefile
+	etc/Makefile
+	include/Makefile
+	include/pkgutils/Makefile
+	man/Makefile
+	man/pkgadd.8
+	man/pkginfo.8
+	man/pkgmk.8
+	man/pkgrm.8
+	man/rejmerge.8
+	scripts/Makefile
+	scripts/pkgmk
+	scripts/rejmerge
+	src/Makefile
 ])
