@@ -32,7 +32,6 @@ void *fmalloc(size_t size);
 const char *base_filename(const char *name);
 
 int pkg_cmp(const void *a, const void *b);
-int pkg_cmp2(const void *a, const void *b);
 int file_cmp(const void *a, const void *b);
 void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
                     int (*cmpf)(const void *a, const void *b),
