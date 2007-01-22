@@ -34,7 +34,7 @@ typedef enum {
 typedef struct {
 	char *name;
 	char *version;
-	list_t files;  // pkg_files_t list
+	list_t files;
 } pkg_desc_t;
 
 typedef struct {
