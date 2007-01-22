@@ -44,6 +44,7 @@ int do_archive(FILE *pkg, do_archive_fun_t func, void *arg1, void *arg2);
 int do_archive_once(const char *fname, do_archive_fun_t func, void *arg1,
                     void *arg2);
 int fetch_line_fields(char *line);
+void run_ldconfig();
 
 #ifdef DEBUG
 #define dbg(str, ...) printf(str, __VA_ARGS__)

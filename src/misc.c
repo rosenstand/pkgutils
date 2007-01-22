@@ -24,6 +24,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <pkgutils/pkgutils.h>
 
 void pkgutils_version() {
@@ -274,4 +278,39 @@ int fetch_line_fields(char *line) {
 		i++;
 	}
 	return 0;
+}
+
+void run_ldconfig() {
+	// running ldconfig is meaningless when --root option specified
+	// because /sbin/ldconfig and /root/sbin/ldconfig could produce
+	// incompatible results. On the other hand /root/sbin/ldconfig
+	// may be infeasible for the host where pkgutils running, i.e.
+	// /root/sbin/ldconfig may be compiled for the different
+	// architecture, thus we can't blindly execute it.
+	if (strcmp(opt_root, ""))
+		return;
+
+	struct stat st;
+	if (stat("/sbin/ldconfig", &st))
+		return;
+
+	pid_t child;
+	child = fork();
+
+	if (child == 0) {
+		execl("/sbin/ldconfig", "/sbin/ldconfig", (char*)NULL);
+		die("failed to execute /sbin/ldconfig");
+	}
+	else if (child == -1) die("can't fork()");
+	else {
+		int status;
+		if (waitpid(child, &status, 0) != child)
+			die("waitpid() failed");
+		if (!WIFEXITED(status) || (WIFEXITED(status) &&
+		                           WEXITSTATUS(status) != 0)) {
+			fprintf(stderr, "ldconfig failed (%d)\n", status);
+			abort();
+		}
+	}
+	return;
 }

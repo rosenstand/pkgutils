@@ -527,6 +527,8 @@ int pkg_add(const char *pkg_path, int opts) {
 
 	cleanup_pkg(pkg, 0); // clean up conflicts flags
 
+	run_ldconfig();
+
 	pkg = NULL;
 cleanup:
 	if (pkg) {

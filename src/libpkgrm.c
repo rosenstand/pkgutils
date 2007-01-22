@@ -135,5 +135,7 @@ int pkg_rm(const char *pkg_name) {
 	list_delete(&pkg_db, _pkg2rm);
 	pkg_commit_db();
 
+	run_ldconfig();
+
 	return 0;
 }
