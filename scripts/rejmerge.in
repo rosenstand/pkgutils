@@ -90,7 +90,7 @@ merge_menu() {
 
 	while true; do
 		info "Merged $1"
-		cat "$TMPFILE" | more
+		cat "$TMPFILE" | $PAGER
 
 		if [ "$REJMERGE_MERGE_INFO" ]; then
 			info "$REJMERGE_MERGE_INFO"
@@ -127,7 +127,7 @@ diff_menu() {
 
 	while true; do
 		info "$1"
-		cat "$TMPFILE" | more
+		cat "$TMPFILE" | $PAGER
 		while true; do
 			info_n "[K]eep [U]pgrade [M]erge [D]iff [S]kip? "
 			read -n1 CMD
@@ -301,6 +301,10 @@ trap "interrupted" SIGHUP SIGINT SIGQUIT SIGTERM
 trap "atexit" EXIT
 
 export LC_ALL=POSIX
+
+if [ "$PAGER" = "" ]; then
+	readonly PAGER="more"
+fi
 
 readonly REJMERGE_VERSION="@VERSION@"
 readonly REJMERGE_COMMAND="${0##*/}"
