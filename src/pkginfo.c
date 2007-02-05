@@ -38,7 +38,8 @@
 
 static
 int opt_installed,
-    opt_orphans;
+    opt_orphans,
+    opt_missing;
 static
 char *opt_list,
      *opt_owner,
@@ -49,12 +50,13 @@ char *opt_list,
 
 static
 void print_usage(const char *argv0) {
-	printf("Usage: %s [-ilofOrhv]\n", argv0);
+	printf("Usage: %s [-ilofOmrhv]\n", argv0);
 	puts("  -i  --installed           list installed packages\n"
 	     "  -l  --list <package|file> list files for file or package\n"
 	     "  -o  --owner <pattern>     print package owner\n"
 	     "  -f  --footprint <file>    print footprint for <file>\n"
 	     "  -O  --orphans=[pattern]   list orphaned files except pattern\n"
+	     "  -m  --missing             list missing files\n"
 	     "  -r  --root                specify alternate root\n"
 	     "  -h  --help                display this help\n"
 	     "  -v  --version             display version information");
@@ -70,13 +72,14 @@ void parse_opts(int argc, char *argv[]) {
 		{"owner"    ,    1, NULL, 'o'},
 		{"footprint",    1, NULL, 'f'},
 		{"orphans"  ,    2, NULL, 'O'},
+		{"missing"  ,    0, NULL, 'm'},
 		{"root"     ,    1, NULL, 'r'},
 		{"help"     ,    0, NULL, 'h'},
 		{"version"  ,    0, NULL, 'v'},
 		{NULL       ,    0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv,"il:o:f:O::r:hv", opts,
+	while ((c = getopt_long(argc, argv,"il:o:f:O::mr:hv", opts,
 	                                                       NULL)) != -1) {
 		switch (c) {
 			case 'i': opt_installed = 1; break;
@@ -87,6 +90,7 @@ void parse_opts(int argc, char *argv[]) {
 				opt_orphans = 1;
 				if (optarg) opt_orphans_pat = optarg;
 				break;
+			case 'm': opt_missing = 1; break;
 			case 'r': opt_root = optarg; break;
 			case 'h': print_usage(argv[0]); exit(0); break;
 			case 'v': pkgutils_version(); exit(0); break;
@@ -99,6 +103,32 @@ void parse_opts(int argc, char *argv[]) {
 		exit(1);
 	}
 	return;
+}
+
+static
+int missing() {
+	struct stat st;
+
+	pkg_init_db();
+	if (chdir(strcmp(opt_root, "") ? opt_root : "/"))
+		die("Can't chdir to root directory");
+
+	list_for_each(_pkg, &pkg_db) {
+		pkg_desc_t *pkg = _pkg->data;
+		list_for_each(_file, &pkg->files) {
+			pkg_file_t *file = _file->data;
+			if (lstat(file->path, &st)) {
+				if (errno == ENOENT || errno == EACCES) {
+					printf("%s/%s\n", opt_root,
+					                  file->path);
+				}
+				else die(file->path);
+			}
+		}
+	}
+
+	pkg_free_db();
+	return 0;
 }
 
 static size_t path_chop_len;
@@ -369,6 +399,7 @@ int PKGINFO_ENTRY(int argc, char *argv[]) {
 	else if (opt_owner) ret = owner();
 	else if (opt_footprint) ret = footprint();
 	else if (opt_orphans) ret = orphans();
+	else if (opt_missing) ret = missing();
 	else print_usage(argv[0]);
 
 	exit(ret);
