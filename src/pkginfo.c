@@ -108,22 +108,41 @@ void parse_opts(int argc, char *argv[]) {
 static
 int missing() {
 	struct stat st;
+	int width = 0;
+	pkg_desc_t *pkg;
+	pkg_file_t *file;
 
 	pkg_init_db();
 	if (chdir(strcmp(opt_root, "") ? opt_root : "/"))
 		die("Can't chdir to root directory");
 
 	list_for_each(_pkg, &pkg_db) {
-		pkg_desc_t *pkg = _pkg->data;
+		pkg = _pkg->data;
 		list_for_each(_file, &pkg->files) {
-			pkg_file_t *file = _file->data;
+			file = _file->data;
 			if (lstat(file->path, &st)) {
-				if (errno == ENOENT || errno == EACCES) {
-					printf("%s/%s\n", opt_root,
-					                  file->path);
-				}
-				else die(file->path);
+				if (errno != ENOENT && errno != EACCES)
+					die(file->path);
 			}
+			else {
+				_file = _file->prev;
+				list_delete(&pkg->files, _file->next);
+			}
+
+		}
+		if (pkg->files.size)
+			width = MAX(strlen(pkg->name), width);
+	}
+
+	list_for_each(_pkg, &pkg_db) {
+		pkg = _pkg->data;
+		if (!pkg->files.size) continue;
+
+		list_for_each(_file, &pkg->files) {
+			file = _file->data;
+			printf("%-*s %s/%s\n", width, pkg->name,
+			                       opt_root, file->path);
+
 		}
 	}
 
