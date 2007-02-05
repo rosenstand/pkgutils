@@ -139,12 +139,9 @@ int missing() {
 	list_for_each(_pkg, &pkg_db) {
 		pkg = _pkg->data;
 		if (!pkg->files.size) continue;
-
 		list_for_each(_file, &pkg->files) {
 			file = _file->data;
-			printf("%-*s %s/%s\n", width, pkg->name,
-			                       opt_root, file->path);
-
+			printf("%-*s %s\n", width, pkg->name, file->path);
 		}
 	}
 
