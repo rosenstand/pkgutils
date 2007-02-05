@@ -202,7 +202,7 @@ void list_db_files(list_t *list) {
 static
 void orphan_found(void **ai, void *arg) {
 	pkg_file_t *file = (*(list_entry_t**)ai)->data;
-	puts(file->path);
+	printf("%s/%s\n", opt_root, file->path);
 	return;
 }
 
