@@ -33,6 +33,10 @@ Default exceptions pattern is:
 -O pattern or --orphans pattern) to pass your own exceptions pattern.
 See \fBgetopt\fP(1) manual page for more information.
 .TP
+.B "\-m, \-\-missing"
+List missing files, i.e. files which are present in database but absent
+in filesystem.
+.TP
 .B "\-r, \-\-root <path>"
 Specify alternative installation root (default is "/"). This
 should be used if you want to display information about a package
