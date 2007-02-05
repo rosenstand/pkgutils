@@ -127,6 +127,8 @@ int missing() {
 			else {
 				_file = _file->prev;
 				list_delete(&pkg->files, _file->next);
+				free(file->path);
+				free(file);
 			}
 
 		}
@@ -173,12 +175,13 @@ void list_fs_files(const char *name, list_t *list) {
 		strcpy(path, name);
 		strcat(path, "/");
 		strcat(path, de->d_name);
-		if (de->d_type == DT_DIR)
-			list_fs_files(path, list);
-		pkg_file_t *file = fmalloc(sizeof(pkg_file_t));
-		file->path = strdup(path + path_chop_len);
-		if (regexec(&orphans_re, file->path, 0, NULL, 0))
+		if (regexec(&orphans_re, path + path_chop_len, 0, NULL, 0)) {
+			pkg_file_t *file = fmalloc(sizeof(pkg_file_t));
+			file->path = strdup(path + path_chop_len);
 			list_append(list, file);
+			if (de->d_type == DT_DIR)
+				list_fs_files(path, list);
+		}
 	}
 
 	closedir(d);
