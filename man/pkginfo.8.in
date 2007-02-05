@@ -22,6 +22,17 @@ List owner(s) of file(s) matching <pattern>.
 Print footprint for <file>. This feature is mainly used by pkgmk(8)
 for creating and comparing footprints.
 .TP
+.B "\-O, \-\-orphans=[pattern]"
+Print orphaned files, i.e. files which are present on the filesystem
+but absent in the database. It's useful if you're interested in cleaning
+up extraneous files.
+Default exceptions pattern is:
+^(dev|sys|proc|mnt|tmp|var|root|home|lost\\+found|boot|etc|lib/modules|opt|usr/var|usr/src|usr/ports|usr/local)
+
+\fBNOTE:\fP you should use -Opattern or --orphans=pattern (not
+-O pattern or --orphans pattern) to pass your own exceptions pattern.
+See \fBgetopt\fP(1) manual page for more information.
+.TP
 .B "\-r, \-\-root <path>"
 Specify alternative installation root (default is "/"). This
 should be used if you want to display information about a package

@@ -26,19 +26,26 @@
 #include <getopt.h>
 #include <sys/param.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include <string.h>
 #include <pwd.h>
 #include <grp.h>
 #include <regex.h>
+#include <errno.h>
 #include <pkgutils/pkgutils.h>
 #include "entry.h"
 
 static
-int opt_installed;
+int opt_installed,
+    opt_orphans;
 static
-char *opt_list = NULL,
-     *opt_owner = NULL,
-     *opt_footprint = NULL;
+char *opt_list,
+     *opt_owner,
+     *opt_footprint,
+     *opt_orphans_pat = "^(dev|sys|proc|mnt|tmp|var|root|home|lost\\+found|"
+                        "boot|etc|lib/modules|opt|usr/var|usr/src|usr/ports|"
+                        "usr/local)";
 
 static
 void print_usage(const char *argv0) {
@@ -47,6 +54,7 @@ void print_usage(const char *argv0) {
 	     "  -l  --list <package|file> list files for file or package\n"
 	     "  -o  --owner <pattern>     print package owner\n"
 	     "  -f  --footprint <file>    print footprint for <file>\n"
+	     "  -O  --orphans=[pattern]   list orphaned files except pattern\n"
 	     "  -r  --root                specify alternate root\n"
 	     "  -h  --help                display this help\n"
 	     "  -v  --version             display version information");
@@ -61,18 +69,24 @@ void parse_opts(int argc, char *argv[]) {
 		{"list"     ,    1, NULL, 'l'},
 		{"owner"    ,    1, NULL, 'o'},
 		{"footprint",    1, NULL, 'f'},
+		{"orphans"  ,    2, NULL, 'O'},
 		{"root"     ,    1, NULL, 'r'},
 		{"help"     ,    0, NULL, 'h'},
 		{"version"  ,    0, NULL, 'v'},
 		{NULL       ,    0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv,"il:o:f:r:hv", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv,"il:o:f:O::r:hv", opts,
+	                                                       NULL)) != -1) {
 		switch (c) {
 			case 'i': opt_installed = 1; break;
 			case 'l': opt_list = optarg; break;
 			case 'o': opt_owner = optarg; break;
 			case 'f': opt_footprint = optarg; break;
+			case 'O':
+				opt_orphans = 1;
+				if (optarg) opt_orphans_pat = optarg;
+				break;
 			case 'r': opt_root = optarg; break;
 			case 'h': print_usage(argv[0]); exit(0); break;
 			case 'v': pkgutils_version(); exit(0); break;
@@ -85,6 +99,127 @@ void parse_opts(int argc, char *argv[]) {
 		exit(1);
 	}
 	return;
+}
+
+static size_t path_chop_len;
+static regex_t orphans_re;
+
+static
+void list_fs_files(const char *name, list_t *list) {
+	DIR *d;
+	struct dirent *de;
+	char path[MAXPATHLEN+2];
+
+	d = opendir(name);
+	if (!d) {
+		if (errno == EACCES) return;
+		else die(name);
+	}
+	
+	while ((de = readdir(d))) {
+		if (de->d_type == DT_DIR && (!strcmp(de->d_name, ".") ||
+		                             !strcmp(de->d_name, ".."))) {
+			continue;
+		}
+		strcpy(path, name);
+		strcat(path, "/");
+		strcat(path, de->d_name);
+		if (de->d_type == DT_DIR)
+			list_fs_files(path, list);
+		pkg_file_t *file = fmalloc(sizeof(pkg_file_t));
+		file->path = strdup(path + path_chop_len);
+		if (regexec(&orphans_re, file->path, 0, NULL, 0))
+			list_append(list, file);
+	}
+
+	closedir(d);
+	return;
+}
+
+static
+void list_db_files(list_t *list) {
+	list_for_each(_pkg, &pkg_db) {
+		pkg_desc_t *pkg = _pkg->data;
+		list_for_each(_file, &pkg->files) {
+			list_append(list, _file->data);
+		}
+	}
+	return;
+}
+
+static
+void orphan_found(void **ai, void *arg) {
+	pkg_file_t *file = (*(list_entry_t**)ai)->data;
+	puts(file->path);
+	return;
+}
+
+static
+void find_orphans(list_t *fs_files_list, list_t *db_files_list) {
+	void **fs_files, **db_files;
+	size_t fs_files_size = fs_files_list->size;
+	size_t db_files_size = db_files_list->size;
+	size_t cnt;
+
+	fs_files = fmalloc(fs_files_size * sizeof(void*));
+	cnt = 0;
+	list_for_each(_file, fs_files_list)
+		fs_files[cnt++] = _file;
+
+	db_files = fmalloc(db_files_size * sizeof(void*));
+	cnt = 0;
+	list_for_each(_file, db_files_list)
+		db_files[cnt++] = _file;
+
+	qsort(fs_files, fs_files_size, sizeof(void*), file_cmp);
+	qsort(db_files, db_files_size, sizeof(void*), file_cmp);
+	intersect_uniq(fs_files, fs_files_size, db_files, db_files_size,
+	               file_cmp, NULL, orphan_found, NULL);
+
+	free(fs_files);
+	free(db_files);
+	return;
+}
+
+static
+int orphans() {
+	list_t fs_files;
+	list_t db_files;
+	const char *opt_root2;
+	
+	if (regcomp(&orphans_re, opt_orphans_pat, REG_EXTENDED | REG_NOSUB)) {
+		fputs("Failed to compile regular expression\n", stderr);
+		return 1;
+	}
+	list_init(&fs_files);
+	list_init(&db_files);
+	pkg_init_db();
+
+	opt_root2 = strcmp(opt_root, "") ? opt_root : "/";
+	path_chop_len = strlen(opt_root2) + 1;
+	
+	list_fs_files(opt_root2, &fs_files);
+	list_db_files(&db_files);
+
+	find_orphans(&fs_files, &db_files);
+
+	list_for_each(_file, &fs_files) {
+		pkg_file_t *file = _file->data;
+		_file = _file->prev;
+		list_delete(&fs_files, _file->next);
+		free(file->path);
+		free(file);
+	}
+	list_free(&fs_files);
+
+	list_for_each(_file, &db_files) {
+		_file = _file->prev;
+		list_delete(&db_files, _file->next);
+	}
+	list_free(&db_files);
+	pkg_free_db();
+	regfree(&orphans_re);
+	return 0;
 }
 
 static
@@ -233,6 +368,7 @@ int PKGINFO_ENTRY(int argc, char *argv[]) {
 	else if (opt_list) ret = list();
 	else if (opt_owner) ret = owner();
 	else if (opt_footprint) ret = footprint();
+	else if (opt_orphans) ret = orphans();
 	else print_usage(argv[0]);
 
 	exit(ret);
