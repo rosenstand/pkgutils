@@ -23,10 +23,12 @@ Print footprint for <file>. This feature is mainly used by pkgmk(8)
 for creating and comparing footprints.
 .TP
 .B "\-O, \-\-orphans=[pattern]"
-Print orphaned files, i.e. files which are present on the filesystem
-but absent in the database. It's useful if you're interested in cleaning
-up extraneous files.
+List orphaned files, i.e. files which are present on filesystem but
+absent in database. It's useful if you're interested in cleaning up
+extraneous files.
+
 Default exceptions pattern is:
+
 ^(dev|sys|proc|mnt|tmp|var|root|home|lost\\+found|boot|etc|lib/modules|opt|usr/var|usr/src|usr/ports|usr/local)
 
 \fBNOTE:\fP you should use -Opattern or --orphans=pattern (not
