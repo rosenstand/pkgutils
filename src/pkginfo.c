@@ -279,12 +279,11 @@ void print_footprint(struct archive *ar, struct archive_entry *en,
 	struct passwd *pw;
 	struct group *gr;
 	
-	// XXX: archive_entry_copy_stat() seems buggy, fill stat manually
 	st.st_mode = archive_entry_mode(en);
 	st.st_uid = archive_entry_uid(en);
 	st.st_gid = archive_entry_gid(en);
 	st.st_size = archive_entry_size(en);
-	// XXX: another workaround for the libarchive possible bug: it do
+	// XXX: workaround for the libarchive possible bug: it do
 	//      not set any type to the hardlinks, but should.
 	if (archive_entry_hardlink(en)) {
 		st.st_mode = st.st_mode |= S_IFREG;
