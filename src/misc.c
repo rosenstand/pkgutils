@@ -84,18 +84,25 @@ void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
                     int (*cmpf)(const void *a, const void *b),
                     void (*intef)(void **ai, void **bj, void *arg),
                     void (*uniqf)(void **ai, void *arg),
-		    void *arg) {
+                    void *arg) {
+	size_t i = 0, j = 0;
 	size_t next = 0;
 	int cmp = 1;
-	for (int i = 0; i < asz; i++) {
-		for (size_t j = next; j < bsz; j++) {
+
+	for (i = 0; i < asz; i++) {
+		for (j = next; j < bsz; j++) {
 			cmp = cmpf(&b[j], &a[i]);
-			if (cmp < 0) continue;
-			else if (cmp > 0) break;
+			if (cmp < 0)
+				continue;
+			else if (cmp > 0) {
+				next = j;
+				break;
+			}
 			else {
 				next = j+1;
 				while (next < bsz) {
-					if (cmpf(&b[j], &b[next])) break;
+					if (cmpf(&b[j], &b[next]))
+						break;
 					next++;
 				}
 				if (intef) intef(&a[i], &b[j], arg);
@@ -103,6 +110,8 @@ void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
 			}
 		}
 		if (cmp != 0 && uniqf) uniqf(&a[i], arg);
+		if (!uniqf && (next >= bsz || j >= bsz))
+			break;
 	}
 	return;
 }
