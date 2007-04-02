@@ -106,9 +106,9 @@ void parse_opts(int argc, char *argv[]) {
 }
 
 static
-int missing() {
+int missing(void) {
 	struct stat st;
-	int width = 0;
+	size_t width = 0;
 	pkg_desc_t *pkg;
 	pkg_file_t *file;
 
@@ -231,7 +231,7 @@ void find_orphans(list_t *fs_files_list, list_t *db_files_list) {
 }
 
 static
-int orphans() {
+int orphans(void) {
 	list_t fs_files;
 	list_t db_files;
 	const char *opt_root2;
@@ -320,13 +320,13 @@ void print_footprint(struct archive *ar, struct archive_entry *en,
 }
 
 static
-int footprint() {
+int footprint(void) {
 	if (!strchr(opt_footprint, '#')) return 1;
 	return do_archive_once(opt_footprint, print_footprint, NULL, NULL);
 }
 
 static
-int owner() {
+int owner(void) {
 	int ret = 1;
 	size_t width = 0;
 	regex_t re;
@@ -370,7 +370,7 @@ void list_ar_files(struct archive *ar, struct archive_entry *en, void *unused1,
 }
 
 static
-int list() {
+int list(void) {
 	int ret = 1;
 	pkg_desc_t *pkg;
 
@@ -395,7 +395,7 @@ int list() {
 }
 
 static
-int installed() {
+int installed(void) {
 	pkg_init_db();
 	
 	list_for_each(_pkg, &pkg_db) {

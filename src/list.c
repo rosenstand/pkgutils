@@ -25,7 +25,8 @@
 #include <stdio.h>
 #endif
 
-void *list_malloc_failed() {
+static
+void *list_malloc_failed(void) {
 	#ifdef LIST_ABORT_ON_ERROR
 	fputs("list: malloc() failed\n", stderr);
 	abort();

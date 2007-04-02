@@ -32,7 +32,7 @@
 #define PKG_DB_DIR   LOCALSTATEDIR"/lib/pkg"
 #define PKG_DB_FILE  PKG_DB_DIR"/db"
 
-void pkg_lock_db() {
+void pkg_lock_db(void) {
 	char *dbdirpath;
 
 	dbdirpath = fmalloc(strlen(opt_root) + sizeof(PKG_DB_DIR));
@@ -46,7 +46,7 @@ void pkg_lock_db() {
 	return;
 }
 
-void pkg_unlock_db() {
+void pkg_unlock_db(void) {
 	if (flock(db_lock, LOCK_UN)) die("Can't unlock database");
 	if (close(db_lock)) die("Can't close database directory");
 	return;
@@ -101,7 +101,7 @@ void pkg_read_db(FILE *pkg_db_file) {
 	return;
 }
 
-void pkg_free_db() {
+void pkg_free_db(void) {
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
 		list_for_each(_file, &pkg->files) {
@@ -118,7 +118,7 @@ void pkg_free_db() {
 	return;
 }
 
-void pkg_init_db() {
+void pkg_init_db(void) {
 	FILE *pkg_db_file;
 	char *dbpath;
 
@@ -138,7 +138,7 @@ void pkg_init_db() {
 }
 
 static
-void sort_db() {
+void sort_db(void) {
 	void **pkgs;
 	int i;
 
@@ -156,7 +156,7 @@ void sort_db() {
 	return;
 }
 
-int pkg_commit_db() {
+int pkg_commit_db(void) {
 	size_t dbpath_size;
 	char *dbpath;
 	char *new_dbpath;

@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <pkgutils/pkgutils.h>
 
-void pkgutils_version() {
+void pkgutils_version(void) {
 	puts("pkgutils-c "VERSION" (C rewrite)\n\n"
 	     "Copyright (C) 2006  Anton Vorontsov\n"
 	     "This is free software.  You may redistribute copies of it \n"
@@ -49,7 +49,7 @@ int die(const char *str) {
 }
 
 static
-void malloc_failed() {
+void malloc_failed(void) {
 	fputs("Out of memory", stderr);
 	abort();
 	return;
@@ -130,7 +130,7 @@ pkg_desc_t *pkg_find_pkg(const char *name) {
 // package name
 int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg) {
 	const char *fname;
-	char *parsed, *tmp;
+	char *parsed, *tmp = NULL;
 	size_t fname_len;
 	int err = 0;
 
@@ -289,7 +289,7 @@ int fetch_line_fields(char *line) {
 	return 0;
 }
 
-void run_ldconfig() {
+void run_ldconfig(void) {
 	// running ldconfig is meaningless when --root option specified
 	// because /sbin/ldconfig and /root/sbin/ldconfig could produce
 	// incompatible results. On the other hand /root/sbin/ldconfig

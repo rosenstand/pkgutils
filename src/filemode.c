@@ -23,6 +23,7 @@
 #define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <pkgutils/filemode.h>
 
 // Set the 's' and 't' flags in file attributes string CHARS,
 // according to the file mode BITS.

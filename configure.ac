@@ -11,6 +11,9 @@ AC_SYS_LARGEFILE
 AC_HEADER_STDC
 AM_CONFIG_HEADER(config.h)
 
+CFLAGS="$CFLAGS -Wall -Wredundant-decls -Wnested-externs -Wstrict-prototypes \
+-Wmissing-prototypes -Wpointer-arith -Winline -Wcast-align -Wbad-function-cast"
+
 AC_CHECK_LIB([archive], [archive_read_open_FILE], [AC_CHECK_HEADER([archive.h], [LIBARCHIVE='-larchive'])])
 if test -n "$LIBARCHIVE"; then
 	CFLAGS="$CFLAGS"

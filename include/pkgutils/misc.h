@@ -26,7 +26,7 @@
 
 typedef void (*do_archive_fun_t)(struct archive *ar, struct archive_entry *en,
                                  void *arg1, void *arg2);
-void pkgutils_version();
+void pkgutils_version(void);
 int die(const char *str);
 void *fmalloc(size_t size);
 const char *base_filename(const char *name);
@@ -44,7 +44,7 @@ int do_archive(FILE *pkg, do_archive_fun_t func, void *arg1, void *arg2);
 int do_archive_once(const char *fname, do_archive_fun_t func, void *arg1,
                     void *arg2);
 int fetch_line_fields(char *line);
-void run_ldconfig();
+void run_ldconfig(void);
 
 #ifdef DEBUG
 #define dbg(str, ...) printf(str, __VA_ARGS__)

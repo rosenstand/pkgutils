@@ -52,7 +52,7 @@ typedef struct {
 } rule_t;
 
 static
-void cleanup_config() {
+void cleanup_config(void) {
 	list_for_each(_rule, &config_rules) {
 		rule_t *rule = _rule->data;
 		regfree(&rule->regex);
@@ -63,7 +63,7 @@ void cleanup_config() {
 }
 
 static
-void read_config() {
+void read_config(void) {
 	char *config;
 	FILE *f;
 	char line[MAXPATHLEN+1];
@@ -466,7 +466,7 @@ void cleanup_pkg(pkg_desc_t *pkg, int remove) {
 }
 
 static
-void cleanup_pkg_db() {
+void cleanup_pkg_db(void) {
 	list_for_each(_pkg, &pkg_db) {
 		pkg_desc_t *pkg = _pkg->data;
 		cleanup_pkg(pkg, 1);
@@ -509,11 +509,11 @@ int pkg_add(const char *pkg_path, int opts) {
 	found_conflicts = report_conflicts(pkg);
 	
 	if (found_conflicts & CONFLICT_PERM && !(opts & PKG_ADD_FORCE_PERM)) {
-		cleanup_pkg_db(NULL, 0);
+		cleanup_pkg_db();
 		goto cleanup;
 	}
 	if (found_conflicts & ~CONFLICT_PERM && !(opts & PKG_ADD_FORCE)) {
-		cleanup_pkg_db(NULL, 0);
+		cleanup_pkg_db();
 		goto cleanup;
 	}
 
