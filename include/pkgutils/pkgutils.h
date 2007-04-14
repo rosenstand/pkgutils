@@ -33,17 +33,17 @@
 #define PKG_ADD_FORCE_PERM 2
 
 // global variables
-char *opt_root;
-list_t pkg_db;
-int db_lock;
+extern char *opt_root;
+extern list_t pkg_db;
+extern int db_lock;
 
 // database managing
-void pkg_lock_db(void);
-void pkg_unlock_db(void);
-void pkg_init_db(void);
-void pkg_free_db(void);
-int pkg_commit_db(void);
+extern void pkg_lock_db(void);
+extern void pkg_unlock_db(void);
+extern void pkg_init_db(void);
+extern void pkg_free_db(void);
+extern int pkg_commit_db(void);
 
 // package management
-int pkg_add(const char *pkg_path, int opts);
-int pkg_rm(const char *pkg_name);
+extern int pkg_add(const char *pkg_path, int opts);
+extern int pkg_rm(const char *pkg_name);

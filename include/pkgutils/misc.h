@@ -26,25 +26,29 @@
 
 typedef void (*do_archive_fun_t)(struct archive *ar, struct archive_entry *en,
                                  void *arg1, void *arg2);
-void pkgutils_version(void);
-int die(const char *str);
-void *fmalloc(size_t size);
-const char *base_filename(const char *name);
+extern void pkgutils_version(void);
+extern int die(const char *str);
+extern void *fmalloc(size_t size);
+extern const char *base_filename(const char *name);
 
-int pkg_cmp(const void *a, const void *b);
-int file_cmp(const void *a, const void *b);
-void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
-                    int (*cmpf)(const void *a, const void *b),
-                    void (*intef)(void **ai, void **bj, void *arg),
-                    void (*uniqf)(void **ai, void *arg),
-                    void *arg);
-pkg_desc_t *pkg_find_pkg(const char *name);
-int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg);
-int do_archive(FILE *pkg, do_archive_fun_t func, void *arg1, void *arg2);
-int do_archive_once(const char *fname, do_archive_fun_t func, void *arg1,
-                    void *arg2);
-int fetch_line_fields(char *line);
-void run_ldconfig(void);
+extern int pkg_cmp(const void *a, const void *b);
+extern int file_cmp(const void *a, const void *b);
+extern void intersect_uniq(void **a, size_t asz, void **b, size_t bsz,
+                           int (*cmpf)(const void *a, const void *b),
+                           void (*intef)(void **ai, void **bj, void *arg),
+                           void (*uniqf)(void **ai, void *arg),
+                           void *arg);
+
+extern pkg_desc_t *pkg_find_pkg(const char *name);
+extern int pkg_make_desc(const char *pkg_path, pkg_desc_t *pkg);
+extern int do_archive(FILE *pkg, do_archive_fun_t func, void *arg1,
+                      void *arg2);
+extern int do_archive_once(const char *fname, do_archive_fun_t func,
+                           void *arg1, void *arg2);
+
+extern int fetch_line_fields(char *line);
+
+extern void run_ldconfig(void);
 
 #ifdef DEBUG
 #define dbg(str, ...) printf(str, __VA_ARGS__)

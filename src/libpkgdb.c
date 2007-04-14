@@ -32,6 +32,10 @@
 #define PKG_DB_DIR   LOCALSTATEDIR"/lib/pkg"
 #define PKG_DB_FILE  PKG_DB_DIR"/db"
 
+char *opt_root;
+list_t pkg_db;
+int db_lock;
+
 void pkg_lock_db(void) {
 	char *dbdirpath;
 

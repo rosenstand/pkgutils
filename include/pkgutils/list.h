@@ -37,13 +37,15 @@ struct _list_t {
 	size_t size;
 };
 
-int list_init(list_t *list);
-void list_free(list_t *list);
-list_entry_t *list_insert_after(list_t *list, list_entry_t *i, void *data);
-list_entry_t *list_insert_before(list_t *list, list_entry_t *i, void *data);
-list_entry_t *list_prepend(list_t *list, void *data);
-list_entry_t *list_append(list_t *list, void *data);
-void list_delete(list_t *list, list_entry_t *i);
+extern int list_init(list_t *list);
+extern void list_free(list_t *list);
+extern list_entry_t *list_insert_after(list_t *list, list_entry_t *i,
+                                       void *data);
+extern list_entry_t *list_insert_before(list_t *list, list_entry_t *i,
+                                        void *data);
+extern list_entry_t *list_prepend(list_t *list, void *data);
+extern list_entry_t *list_append(list_t *list, void *data);
+extern void list_delete(list_t *list, list_entry_t *i);
 
 #define list_for_each(i, list) \
 	for (list_entry_t *i = (list)->head->next; i->next; i = i->next)
