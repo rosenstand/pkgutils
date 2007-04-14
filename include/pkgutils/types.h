@@ -21,6 +21,7 @@
 
 #pragma once
 #include <sys/types.h>
+#include <pkgutils/list.h>
 
 typedef enum {
 	CONFLICT_NONE = 0,  // gag
