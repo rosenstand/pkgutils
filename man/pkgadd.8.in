@@ -16,7 +16,7 @@ compatibility with C++ish pkgutils. \fBpkgadd\fP will install
 new package and upgrade if it was already installed.
 
 .TP
-.B "\-f, \-\-force"
+.B "\-o, \-\-force\-over"
 Force installation, overwrite conflicting files. If the package
 that is about to be installed contains files that are already
 installed this option will cause all those files to be overwritten.
@@ -29,6 +29,10 @@ permissions on files and directories, this is done for two reasons:
 you will notice when some files on your system changed permissions,
 and you will in safe if you'll try to install miss-built package
 (e.g. with wrong permissions on /var directory).
+.TP
+
+.B "\-f, \-\-force"
+Same as if \-\-force\-over and \-\-force\-perms specified together.
 .TP
 
 .B "\-r, \-\-root <path>"

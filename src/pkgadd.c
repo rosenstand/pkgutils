@@ -31,9 +31,10 @@ int opt_force;
 
 static
 void print_usage(const char *argv0) {
-	printf("Usage: %s [-fprhv] <package>\n", argv0);
-	puts("  -f  --force         ignore database and filesystem conflicts\n"
+	printf("Usage: %s [-opfrhv] <package>\n", argv0);
+	puts("  -o  --force-over    ignore database and filesystem conflicts\n"
 	     "  -p  --force-perms   ignore permissions conflicts\n"
+	     "  -f  --force         same as -o and -p together\n"
 	     "  -r  --root          specify alternate root\n"
 	     "  -h  --help          display this help\n"
 	     "  -v  --version       display version information");
@@ -44,8 +45,9 @@ static
 void parse_opts(int argc, char *argv[]) {
 	int c;
 	struct option opts[] = {
-		{"force"      , 0, NULL, 'f'},
+		{"force-over" , 0, NULL, 'o'},
 		{"force-perms", 0, NULL, 'p'},
+		{"force"      , 0, NULL, 'f'},
 		{"upgrade"    , 1, NULL, 'u'},
 		{"root"       , 1, NULL, 'r'},
 		{"help"       , 0, NULL, 'h'},
@@ -53,12 +55,13 @@ void parse_opts(int argc, char *argv[]) {
 		{NULL         , 0, NULL, 0}
 	};
 
-	while ((c = getopt_long(argc, argv, "fpur:hv", opts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "opfur:hv", opts, NULL)) != -1) {
 		switch (c) {
-			case 'r': opt_root = optarg; break;
-			case 'f': opt_force |= PKG_ADD_FORCE; break;
+			case 'f': opt_force |= PKG_ADD_FORCE_PERM;
+			case 'o': opt_force |= PKG_ADD_FORCE; break;
 			case 'p': opt_force |= PKG_ADD_FORCE_PERM; break;
 			case 'u': break; // compatibility with C++ish pkgutils
+			case 'r': opt_root = optarg; break;
 			case 'h': print_usage(argv[0]); exit(0); break;
 			case 'v': pkgutils_version(); exit(0); break;
 			case '?': exit(1); break;
